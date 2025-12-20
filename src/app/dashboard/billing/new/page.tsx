@@ -52,7 +52,7 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: P
                 </Button>
                 <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
             </div>
-            <InvoiceForm clients={clients} products={products} isQuote={isQuote} initialData={initialData} />
+            <InvoiceForm clients={clients} products={products} isQuote={isQuote} initialData={initialData ? { ...initialData, paymentCondition: initialData.paymentCondition || "" } : undefined} />
         </div>
     )
 }
