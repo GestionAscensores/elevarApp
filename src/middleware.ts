@@ -44,7 +44,7 @@ export default auth(async (req) => {
         hasCustomSession: !!customSession,
         role: userRole,
         status: userSubStatus,
-        tokenStatus: token?.subscriptionStatus,
+        tokenStatus: (token as any)?.subscriptionStatus,
         customStatus: customSession?.subscriptionStatus
     })
 
