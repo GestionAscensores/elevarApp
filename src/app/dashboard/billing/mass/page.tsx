@@ -8,6 +8,14 @@ import Link from 'next/link'
 export default async function MassBillingPage() {
     const clients = await getClients()
 
+    const serializedClients = clients.map((c: any) => ({
+        ...c,
+        items: c.items?.map((item: any) => ({
+            ...item,
+            price: Number(item.price)
+        }))
+    }))
+
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
@@ -18,7 +26,7 @@ export default async function MassBillingPage() {
                 </Button>
                 <h1 className="text-2xl font-bold tracking-tight">Facturación Masiva de Abonos</h1>
             </div>
-            <MassInvoiceForm clients={clients} />
+            <MassInvoiceForm clients={serializedClients} />
         </div>
     )
 }
