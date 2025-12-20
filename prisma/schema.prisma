@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                       String      @id @default(cuid())
+  cuit                     String?     @unique
+  password                 String?
+  email                    String?     @unique
+  name                     String?
+  role                     String      @default("USER")
+  isActive                 Boolean     @default(true)
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
+  image                    String?
+  subscriptionExpiresAt    DateTime?
+  subscriptionStatus       String      @default("trial")
+  trialEndsAt              DateTime?
+  emailVerified            DateTime?
+  acceptedTerms            Boolean     @default(false)
+  acceptedTermsAt          DateTime?
+  emailVerificationCode    String?
+  emailVerificationExpires DateTime?
+  isEmailVerified          Boolean     @default(false)
+  accounts                 Account[]
+  clients                  Client[]
+  invoices                 Invoice[]
+  products                 Product[]
+  receipts                 Receipt[]
+  sessions                 Session[]
+  config                   UserConfig?
+}
+
+model UserConfig {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  certEncrypted     String?
+  keyEncrypted      String?
+  afipToken         String?
+  afipSign          String?
+  afipExpiration    DateTime?
+  salePoint         Int       @default(1)
+  logoUrl           String?
+  emailTemplate     String?
+  ivaCondition      String    @default("Responsable Inscripto")
+  businessAddress   String?
+  businessName      String?
+  businessPhone     String?
+  emailBody         String?
+  emailSubject      String?
+  fantasyName       String?
+  businessEmail     String?   // Email visible para clientes (Reply-To)
+  lastDraftNumber   Int       @default(0)
+  lastReceiptNumber Int       @default(0)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id                    String            @id @default(cuid())
+  userId                String
+  cuit                  String
+  name                  String
+  address               String?
+  ivaCondition          String
+  email                 String?
+  phone                 String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  docType               String            @default("80")
+  excludeFromMassUpdate Boolean           @default(false)
+  priceUpdateFrequency  String            @default("MONTHLY")
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items                 ClientEquipment[]
+  invoices              Invoice[]
+  priceHistory          PriceHistory[]
+  receipts              Receipt[]
+
+  @@unique([userId, cuit, address])
+}
+
+model ClientEquipment {
+  id       String  @id @default(cuid())
+  clientId String
+  type     String
+  quantity Int     @default(1)
+  price    Decimal @db.Decimal(12, 2)
+  client   Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id           String        @id @default(cuid())
+  userId       String
+  code         String?
+  name         String
+  description  String?
+  price        Decimal       @db.Decimal(10, 2)
+  currency     String        @default("ARS")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  ivaRate      String        @default("21")
+  invoiceItems InvoiceItem[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id               String        @id @default(cuid())
+  userId           String
+  clientId         String
+  type             String
+  pointOfSale      Int
+  number           Int
+  date             DateTime
+  cae              String?
+  caeExpiresAt     DateTime?
+  netAmount        Decimal       @db.Decimal(12, 2)
+  ivaAmount        Decimal       @db.Decimal(12, 2)
+  totalAmount      Decimal       @db.Decimal(12, 2)
+  currency         String        @default("ARS")
+  exchangeRate     Decimal       @default(1) @db.Decimal(10, 4)
+  status           String        @default("DRAFT")
+  afipErrorCode    String?
+  afipErrorMsg     String?
+  qrCodeData       String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  concept          Int           @default(1)
+  paymentCondition String?       @default("Transferencia")
+  paymentDue       DateTime?
+  quoteNumber      Int?
+  relatedInvoiceId String?
+  serviceFrom      DateTime?
+  serviceTo        DateTime?
+  draftNumber      Int?
+  client           Client        @relation(fields: [clientId], references: [id])
+  relatedInvoice   Invoice?      @relation("CreditNoteRelation", fields: [relatedInvoiceId], references: [id])
+  creditNotes      Invoice[]     @relation("CreditNoteRelation")
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items            InvoiceItem[]
+  receipts         Receipt[]     @relation("InvoiceToReceipt")
+}
+
+model Receipt {
+  id          String    @id @default(cuid())
+  userId      String
+  clientId    String
+  number      Int
+  date        DateTime
+  totalAmount Decimal   @db.Decimal(12, 2)
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  client      Client    @relation(fields: [clientId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices    Invoice[] @relation("InvoiceToReceipt")
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  productId   String?
+  description String
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  subtotal    Decimal  @db.Decimal(12, 2)
+  ivaRate     Decimal  @db.Decimal(5, 2)
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PriceHistory {
+  id               String   @id @default(cuid())
+  clientId         String
+  previousPrice    Decimal  @db.Decimal(10, 2)
+  newPrice         Decimal  @db.Decimal(10, 2)
+  percentageChange Decimal  @db.Decimal(5, 2)
+  month            String
+  updatedBy        String
+  isMassUpdate     Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([month])
+}
