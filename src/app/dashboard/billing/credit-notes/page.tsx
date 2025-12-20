@@ -144,7 +144,7 @@ export default async function CreditNotesPage() {
                                 issued.map((inv: any) => (
                                     <TableRow key={inv.id}>
                                         <TableCell>{inv.date ? new Date(inv.date).toLocaleDateString() : '-'}</TableCell>
-                                        <TableCell>{inv.type}</TableCell> {/* NCA, NCB... */}
+                                        <TableCell>{inv.type}</TableCell>
                                         <TableCell className="font-mono">{String(inv.number).padStart(8, '0')}</TableCell>
                                         <TableCell>{inv.client?.name}</TableCell>
                                         <TableCell>

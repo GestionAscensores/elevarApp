@@ -27,10 +27,34 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
         return 'Editar Factura'
     }
 
+    // Serialize Decimal fields
+    const serializedInvoice = {
+        ...invoice,
+        netAmount: Number(invoice.netAmount || 0),
+        ivaAmount: Number(invoice.ivaAmount || 0),
+        totalAmount: Number(invoice.totalAmount || 0),
+        exchangeRate: Number(invoice.exchangeRate || 1),
+        items: invoice.items.map(item => ({
+            ...item,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            price: Number(item.unitPrice), // Alias for compatibility
+            subtotal: Number(item.subtotal),
+            ivaRate: String(item.ivaRate)
+        })),
+        relatedInvoice: invoice.relatedInvoice ? {
+            ...invoice.relatedInvoice,
+            netAmount: Number(invoice.relatedInvoice.netAmount || 0),
+            ivaAmount: Number(invoice.relatedInvoice.ivaAmount || 0),
+            totalAmount: Number(invoice.relatedInvoice.totalAmount || 0),
+            exchangeRate: Number(invoice.relatedInvoice.exchangeRate || 1),
+        } : null
+    }
+
     return (
         <div className="space-y-4">
             <h1 className="text-2xl font-bold tracking-tight">{getTitle()}</h1>
-            <EditInvoiceForm invoice={invoice} products={products} />
+            <EditInvoiceForm invoice={serializedInvoice} products={products} />
         </div>
     )
 }
