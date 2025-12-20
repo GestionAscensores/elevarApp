@@ -5,6 +5,8 @@ import { renderToBuffer } from '@react-pdf/renderer'
 import { NextResponse } from 'next/server'
 import React from 'react'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await verifySession()

@@ -6,6 +6,8 @@ import { renderToBuffer, Document, Page, Text, View } from '@react-pdf/renderer'
 import { NextResponse } from 'next/server'
 import React from 'react'
 
+export const dynamic = 'force-dynamic'
+
 // Friendly URL Route: /api/invoices/[id]/pdf/download/[filename]
 export async function GET(request: Request, { params }: { params: Promise<{ id: string, filename: string }> }) {
     try {

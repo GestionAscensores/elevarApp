@@ -7,6 +7,8 @@ import { Document, Page } from '@react-pdf/renderer'
 import React from 'react'
 import { generateAfipQrUrl } from '@/lib/afip/afip-qr'
 
+export const dynamic = 'force-dynamic'
+
 // We need a wrapper to combine multiple invoices into one Document with multiple Pages
 const BulkInvoicePDF = ({ invoices }: { invoices: any[] }) => {
     // We already have <InvoicePDF> which renders a <Document><Page/></Document>

@@ -1,10 +1,11 @@
-
 import { db } from '@/lib/db'
 import { verifySession } from '@/lib/session'
 import { InvoicePDF } from '@/components/billing/invoice-pdf'
 import { renderToBuffer, Document, Page, Text, View } from '@react-pdf/renderer'
 import { NextResponse } from 'next/server'
 import React from 'react'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
