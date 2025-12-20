@@ -34,8 +34,8 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: P
                 items: sourceInvoice.items.map(i => ({
                     productId: i.productId || '',
                     description: i.description,
-                    quantity: Number(i.quantity),
-                    price: Number(i.unitPrice),
+                    quantity: Number(i.quantity), // Serialize Decimal
+                    price: Number(i.unitPrice),   // Serialize Decimal
                     ivaRate: String(i.ivaRate)
                 }))
             }

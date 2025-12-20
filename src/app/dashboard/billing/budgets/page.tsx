@@ -10,7 +10,26 @@ import { EmitInvoiceButton } from '@/components/billing/emit-button'
 import { DeleteInvoiceButton } from '@/components/billing/delete-button'
 
 export default async function BudgetsPage() {
-    const quotes = await getInvoices({ isBudget: true })
+    const rawQuotes = await getInvoices({ isBudget: true })
+
+    // Helper to serialize decimals
+    const serializeInvoice = (inv: any) => ({
+        ...inv,
+        netAmount: inv.netAmount ? Number(inv.netAmount) : 0,
+        ivaAmount: inv.ivaAmount ? Number(inv.ivaAmount) : 0,
+        totalAmount: inv.totalAmount ? Number(inv.totalAmount) : 0,
+        exchangeRate: inv.exchangeRate ? Number(inv.exchangeRate) : 0,
+        items: inv.items?.map((item: any) => ({
+            ...item,
+            quantity: item.quantity ? Number(item.quantity) : 0,
+            price: item.price ? Number(item.price) : 0,
+            unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
+            subtotal: item.subtotal ? Number(item.subtotal) : 0,
+            ivaRate: item.ivaRate ? Number(item.ivaRate) : 0,
+        }))
+    })
+
+    const quotes = rawQuotes.map(serializeInvoice)
 
     return (
         <div className="space-y-8">

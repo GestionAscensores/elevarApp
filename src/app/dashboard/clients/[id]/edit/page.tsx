@@ -15,10 +15,19 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
 
     if (!client) notFound()
 
+    // Serialize Decimals for Client Component
+    const serializedClient = {
+        ...client,
+        items: client.items.map(item => ({
+            ...item,
+            price: Number(item.price)
+        }))
+    }
+
     return (
         <div className="space-y-4">
             <h1 className="text-2xl font-bold tracking-tight">Editar Cliente</h1>
-            <EditClientForm client={client} />
+            <EditClientForm client={serializedClient} />
         </div>
     )
 }
