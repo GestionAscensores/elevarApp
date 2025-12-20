@@ -119,7 +119,7 @@ export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
                                         onCheckedChange={(checked) => toggleOne(inv.id, !!checked)}
                                     />
                                 </TableCell>
-                                <TableCell>{inv.date ? new Date(inv.date).toLocaleDateString() : '-'}</TableCell>
+                                <TableCell>{inv.date ? new Date(inv.date).toLocaleDateString('es-AR') : '-'}</TableCell>
                                 <TableCell>Factura {inv.type}</TableCell>
                                 <TableCell className="font-mono">
                                     <Link href={`/dashboard/billing/${inv.id}`} className="hover:underline text-blue-600">

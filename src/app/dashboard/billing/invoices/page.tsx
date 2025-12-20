@@ -17,7 +17,26 @@ import { PrintDraftButton } from '@/components/billing/print-draft-button'
 
 export default async function InvoicesPage() {
     // Get all invoices that are NOT Credit Notes
-    const allInvoices = await getInvoices({ isCreditNote: false })
+    const rawInvoices = await getInvoices({ isCreditNote: false })
+
+    // Helper to serialize decimals
+    const serializeInvoice = (inv: any) => ({
+        ...inv,
+        netAmount: inv.netAmount ? Number(inv.netAmount) : 0,
+        ivaAmount: inv.ivaAmount ? Number(inv.ivaAmount) : 0,
+        totalAmount: inv.totalAmount ? Number(inv.totalAmount) : 0,
+        exchangeRate: inv.exchangeRate ? Number(inv.exchangeRate) : 0,
+        items: inv.items?.map((item: any) => ({
+            ...item,
+            quantity: item.quantity ? Number(item.quantity) : 0,
+            price: item.price ? Number(item.price) : (item.unitPrice ? Number(item.unitPrice) : 0), // Handle both naming conventions if needed
+            unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
+            subtotal: item.subtotal ? Number(item.subtotal) : 0,
+            ivaRate: item.ivaRate ? Number(item.ivaRate) : 0,
+        }))
+    })
+
+    const allInvoices = rawInvoices.map(serializeInvoice)
 
     // Filter locally
     const drafts = allInvoices.filter((i: any) => i.status === 'DRAFT')
