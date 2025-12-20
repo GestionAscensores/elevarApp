@@ -1,8 +1,9 @@
-import { getSession } from "@/lib/auth"
+export const dynamic = 'force-dynamic'
+import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
 export default async function TestPage() {
-    const session = await getSession()
+    const session = await auth()
 
     if (!session) {
         redirect('/login')
