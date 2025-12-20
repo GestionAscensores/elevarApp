@@ -101,12 +101,21 @@ export async function getDashboardMetrics() {
         include: { client: true }
     })
 
+    const serializedRecentInvoices = recentInvoices.map((inv: any) => ({
+        ...inv,
+        netAmount: Number(inv.netAmount || 0),
+        ivaAmount: Number(inv.ivaAmount || 0),
+        totalAmount: Number(inv.totalAmount || 0),
+        exchangeRate: Number(inv.exchangeRate || 1),
+    }))
+
     return {
         totalBilled: Number(currentMonthInvoices._sum.totalAmount || 0),
         invoicesCount: currentMonthInvoices._count,
         totalClients: totalClientsCount, // Or active based on distinct
         activeClients: distinctClients.length,
+        activeClients: distinctClients.length,
         chartData,
-        recentInvoices
+        recentInvoices: serializedRecentInvoices
     }
 }

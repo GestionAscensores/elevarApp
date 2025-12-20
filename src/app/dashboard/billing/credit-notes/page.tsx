@@ -12,7 +12,31 @@ import { EmitInvoiceButton } from '@/components/billing/emit-button'
 import { DeleteInvoiceButton } from '@/components/billing/delete-button'
 
 export default async function CreditNotesPage() {
-    const allNCs = await getInvoices({ isCreditNote: true })
+    const rawNCs = await getInvoices({ isCreditNote: true })
+
+    const serializeInvoice = (inv: any) => ({
+        ...inv,
+        netAmount: Number(inv.netAmount || 0),
+        ivaAmount: Number(inv.ivaAmount || 0),
+        totalAmount: Number(inv.totalAmount || 0),
+        exchangeRate: Number(inv.exchangeRate || 1),
+        relatedInvoice: inv.relatedInvoice ? {
+            ...inv.relatedInvoice,
+            netAmount: Number(inv.relatedInvoice.netAmount || 0),
+            ivaAmount: Number(inv.relatedInvoice.ivaAmount || 0),
+            totalAmount: Number(inv.relatedInvoice.totalAmount || 0),
+            exchangeRate: Number(inv.relatedInvoice.exchangeRate || 1),
+        } : null,
+        items: inv.items?.map((item: any) => ({
+            ...item,
+            quantity: Number(item.quantity || 0),
+            unitPrice: Number(item.unitPrice || 0),
+            subtotal: Number(item.subtotal || 0),
+            ivaRate: String(item.ivaRate || '0')
+        }))
+    })
+
+    const allNCs = rawNCs.map(serializeInvoice)
 
     const drafts = allNCs.filter((i: any) => i.status === 'DRAFT')
     const issued = allNCs.filter((i: any) => i.status !== 'DRAFT')
