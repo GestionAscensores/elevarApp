@@ -562,7 +562,7 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
                                     value={editTrialEndsAt}
                                     onChange={(e) => setEditTrialEndsAt(e.target.value)}
                                 />
-                                <p className="text-[10px] text-muted-foreground">Original: {formatDate(selectedUser?.trialEndsAt)}</p>
+                                <p className="text-[10px] text-muted-foreground">Original: {formatDate(selectedUser?.trialEndsAt ?? null)}</p>
                             </div>
                             <div className="space-y-1">
                                 <Label htmlFor="edit-sub">Fin Suscripción</Label>
@@ -572,7 +572,7 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
                                     value={editSubscriptionExpiresAt}
                                     onChange={(e) => setEditSubscriptionExpiresAt(e.target.value)}
                                 />
-                                <p className="text-[10px] text-muted-foreground">Original: {formatDate(selectedUser?.subscriptionExpiresAt)}</p>
+                                <p className="text-[10px] text-muted-foreground">Original: {formatDate(selectedUser?.subscriptionExpiresAt ?? null)}</p>
                             </div>
                         </div>
 
