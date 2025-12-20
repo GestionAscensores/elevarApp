@@ -19,6 +19,13 @@ export default async function BudgetsPage() {
         ivaAmount: inv.ivaAmount ? Number(inv.ivaAmount) : 0,
         totalAmount: inv.totalAmount ? Number(inv.totalAmount) : 0,
         exchangeRate: inv.exchangeRate ? Number(inv.exchangeRate) : 0,
+        relatedInvoice: inv.relatedInvoice ? {
+            ...inv.relatedInvoice,
+            netAmount: Number(inv.relatedInvoice.netAmount || 0),
+            ivaAmount: Number(inv.relatedInvoice.ivaAmount || 0),
+            totalAmount: Number(inv.relatedInvoice.totalAmount || 0),
+            exchangeRate: Number(inv.relatedInvoice.exchangeRate || 1),
+        } : null,
         items: inv.items?.map((item: any) => ({
             ...item,
             quantity: item.quantity ? Number(item.quantity) : 0,

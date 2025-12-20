@@ -106,7 +106,7 @@ export async function getConfig() {
     const session = await verifySession()
     if (!session) return null
 
-    return db.userConfig.findUnique({
+    const config = await db.userConfig.findUnique({
         where: { userId: session.userId },
         include: {
             user: {
@@ -117,4 +117,11 @@ export async function getConfig() {
             }
         }
     })
+
+    if (!config) return null
+
+    return {
+        ...config,
+        afipExpiration: config.afipExpiration?.toISOString() || null
+    }
 }

@@ -26,10 +26,17 @@ export default async function InvoicesPage() {
         ivaAmount: inv.ivaAmount ? Number(inv.ivaAmount) : 0,
         totalAmount: inv.totalAmount ? Number(inv.totalAmount) : 0,
         exchangeRate: inv.exchangeRate ? Number(inv.exchangeRate) : 0,
+        relatedInvoice: inv.relatedInvoice ? {
+            ...inv.relatedInvoice,
+            netAmount: Number(inv.relatedInvoice.netAmount || 0),
+            ivaAmount: Number(inv.relatedInvoice.ivaAmount || 0),
+            totalAmount: Number(inv.relatedInvoice.totalAmount || 0),
+            exchangeRate: Number(inv.relatedInvoice.exchangeRate || 1),
+        } : null,
         items: inv.items?.map((item: any) => ({
             ...item,
             quantity: item.quantity ? Number(item.quantity) : 0,
-            price: item.price ? Number(item.price) : (item.unitPrice ? Number(item.unitPrice) : 0), // Handle both naming conventions if needed
+            price: item.price ? Number(item.price) : (item.unitPrice ? Number(item.unitPrice) : 0),
             unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
             subtotal: item.subtotal ? Number(item.subtotal) : 0,
             ivaRate: item.ivaRate ? Number(item.ivaRate) : 0,

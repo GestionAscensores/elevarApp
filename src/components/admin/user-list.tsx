@@ -22,11 +22,11 @@ type User = {
     role: string
     isActive: boolean
     subscriptionStatus: string
-    subscriptionExpiresAt: Date | null
-    trialEndsAt: Date | null
-    createdAt: Date
-    updatedAt: Date
-    acceptedTermsAt: Date | null
+    subscriptionExpiresAt: string | null
+    trialEndsAt: string | null
+    createdAt: string
+    updatedAt: string
+    acceptedTermsAt: string | null
     isEmailVerified: boolean
     image: string | null
     invoiceCount: number
