@@ -16,12 +16,28 @@ export default async function InvoiceDetailsPage({ params, searchParams }: { par
     const sp = await searchParams
     const isReadOnly = sp.readonly === 'true'
 
-    const invoice = await db.invoice.findUnique({
+    const rawInvoice = await db.invoice.findUnique({
         where: { id, userId: session.userId },
         include: { items: true, client: true }
     })
 
-    if (!invoice) notFound()
+    if (!rawInvoice) notFound()
+
+    // Serialize Decimals for Client Component
+    const invoice = {
+        ...rawInvoice,
+        netAmount: Number(rawInvoice.netAmount),
+        ivaAmount: Number(rawInvoice.ivaAmount),
+        totalAmount: Number(rawInvoice.totalAmount),
+        exchangeRate: Number(rawInvoice.exchangeRate),
+        items: rawInvoice.items.map(item => ({
+            ...item,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            subtotal: Number(item.subtotal),
+            ivaRate: String(item.ivaRate)
+        }))
+    }
 
     return (
         <div className="space-y-6">

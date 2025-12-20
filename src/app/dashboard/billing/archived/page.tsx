@@ -9,7 +9,20 @@ import { ArchivedActions } from '@/components/billing/archived-actions'
 export default async function ArchivedInvoicesPage() {
     // Get PROVISIONAL invoices
     const allInvoices = await getInvoices({ isCreditNote: false })
-    const drafts = allInvoices.filter((i: any) => i.status === 'PROVISIONAL')
+    const drafts = allInvoices.filter((i: any) => i.status === 'PROVISIONAL').map((inv: any) => ({
+        ...inv,
+        netAmount: Number(inv.netAmount || 0),
+        ivaAmount: Number(inv.ivaAmount || 0),
+        totalAmount: Number(inv.totalAmount || 0),
+        exchangeRate: Number(inv.exchangeRate || 1), // Serialize exchangeRate too!
+        items: inv.items?.map((item: any) => ({
+            ...item,
+            quantity: Number(item.quantity || 0),
+            unitPrice: Number(item.unitPrice || 0),
+            subtotal: Number(item.subtotal || 0),
+            ivaRate: String(item.ivaRate || '0')
+        }))
+    }))
 
     return (
         <div className="space-y-8">
