@@ -1,5 +1,5 @@
-
 import { db } from '@/lib/db'
+import { generateInvoiceFilename } from '@/lib/invoice-utils'
 import { verifySession } from '@/lib/session'
 import { InvoicePDF } from '@/components/billing/invoice-pdf'
 import { renderToBuffer, Document, Page, Text, View } from '@react-pdf/renderer'
@@ -62,10 +62,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
         console.log("PDF: Buffer generated. Size:", pdfBuffer.length)
 
-        // Use the filename provided in the URL if valid, otherwise fallback
-        const finalFilename = filename || (invoice.status === 'QUOTE'
-            ? `Presupuesto-${String(invoice.id).slice(-6)}.pdf`
-            : `Factura-${String(invoice.number).padStart(3, '0')}.pdf`)
+        // Use the filename provided in the URL if valid, otherwise fallback usage the shared utility
+        const finalFilename = filename || generateInvoiceFilename(invoice)
 
         // Create response with the buffer
         // Note: casting buffer to any is standard workaround for Next.js types

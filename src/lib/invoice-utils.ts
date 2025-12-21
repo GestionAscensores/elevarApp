@@ -24,6 +24,6 @@ export function generateInvoiceFilename(invoice: any): string {
     }
 
     // 3. Defaults (Invoices / Drafts / Provisional)
-    // "Nombre del cliente - Producto de la factura"
-    return `${sanitizedClient} - ${sanitizedProduct}${extension}`
+    // "Factura Cliente Producto.pdf"
+    return `Factura ${sanitizedClient} ${sanitizedProduct}${extension}`
 }
