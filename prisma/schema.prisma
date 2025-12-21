@@ -60,6 +60,12 @@ model UserConfig {
   businessEmail     String?   // Email visible para clientes (Reply-To)
   lastDraftNumber   Int       @default(0)
   lastReceiptNumber Int       @default(0)
+
+  // Auto Billing
+  autoBillingEnabled     Boolean   @default(false)
+  autoBillingDay         Int       @default(1)
+  lastAutoBillingMonth   String?   // Format: "YYYY-MM"
+  
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -142,6 +148,8 @@ model Invoice {
   draftNumber      Int?
   sentCount        Int           @default(0)
   lastSentAt       DateTime?
+  paymentStatus    String        @default("PENDING") // PENDING, PAID, CANCELLED
+  paymentDate      DateTime?
   client           Client        @relation(fields: [clientId], references: [id])
   relatedInvoice   Invoice?      @relation("CreditNoteRelation", fields: [relatedInvoiceId], references: [id])
   creditNotes      Invoice[]     @relation("CreditNoteRelation")

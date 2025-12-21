@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import {
     Building, // Icon for Edificios
+    Building2, // Icon for Sidebar Header
     FileText,
     Settings,
     CreditCard,
@@ -76,15 +77,17 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
     }
 
     // Determine Display Title
-    const displayTitle = user?.config?.fantasyName || user?.config?.businessName || 'Panel de Control'
+    const fantasyName = user?.config?.fantasyName || 'Panel de Control'
+    const businessName = user?.config?.businessName || user?.name || ''
 
     return (
         <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
             <div className="hidden border-r border-white/10 bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))] md:block transition-colors duration-300">
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-14 items-center border-b border-white/10 px-4 lg:h-[60px] lg:px-6">
-                        <Link href="/" className="flex items-center gap-2 font-semibold text-[hsl(var(--sidebar-foreground))]">
-                            <span className="">Elevar App</span>
+                        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-[hsl(var(--sidebar-foreground))] tracking-wide">
+                            <span className="">ELEVAR APP</span>
+                            <Building2 className="h-7 w-7" />
                         </Link>
                     </div>
                     <div className="flex-1">
@@ -193,7 +196,12 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                         </SheetContent>
                     </Sheet>
                     <div className="w-full flex-1">
-                        <h1 className="text-lg font-semibold md:text-xl">{displayTitle}</h1>
+                        <div className="flex flex-col">
+                            <h1 className="text-lg font-bold md:text-xl leading-none">{fantasyName}</h1>
+                            {businessName && businessName !== fantasyName && (
+                                <span className="text-xs text-muted-foreground font-medium">{businessName}</span>
+                            )}
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-medium hidden md:block">

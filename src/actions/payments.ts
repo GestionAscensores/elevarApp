@@ -1,79 +1,60 @@
 'use server'
 
-import { MercadoPagoConfig, Preference } from 'mercadopago'
+import { db } from '@/lib/db'
 import { verifySession } from '@/lib/session'
-import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 
-// Initialize MP Client
-// NOTE: We use strict non-null assertion or fallback to avoid crash if env is missing during build
-const client = new MercadoPagoConfig({
-    accessToken: process.env.MP_ACCESS_TOKEN || ''
-})
-
-export async function createSubscriptionPreference() {
+export async function togglePaymentStatus(invoiceId: string, currentStatus: string) {
     const session = await verifySession()
-    if (!session) {
-        return { success: false, message: 'No autorizado' }
-    }
+    if (!session) return { message: 'No autorizado' }
 
-    if (!process.env.MP_ACCESS_TOKEN) {
-        console.error("MP_ACCESS_TOKEN is missing")
-        return { success: false, message: 'Error de configuración de pagos (Token faltante)' }
-    }
+    // Logic: PENDING -> PAID -> PENDING
+    // Could support CANCELLED in future, but simple toggle for now.
+    const newStatus = currentStatus === 'PAID' ? 'PENDING' : 'PAID'
+    const newDate = newStatus === 'PAID' ? new Date() : null
 
     try {
-        // Fetch user email since session doesn't always have it
-        const { db } = await import('@/lib/db')
-        const user = await db.user.findUnique({
-            where: { id: session.userId },
-            select: { email: true }
-        })
-
-        if (!user || !user.email) {
-            return { success: false, message: 'Usuario sin email configurado' }
-        }
-
-        const preference = new Preference(client)
-
-        // Define subscription price (Hardcoded for now or fetch from DB config)
-        const price = 15000 // $15.000 ARS
-
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-
-        const result = await preference.create({
-            body: {
-                items: [
-                    {
-                        id: 'subscription-monthly',
-                        title: 'Suscripción Mensual - Elevar App',
-                        quantity: 1,
-                        unit_price: price,
-                        currency_id: 'ARS'
-                    }
-                ],
-                payer: {
-                    email: user.email,
-                },
-                back_urls: {
-                    success: `${appUrl}/dashboard/subscription/success`,
-                    failure: `${appUrl}/dashboard/subscription/failure`,
-                    pending: `${appUrl}/dashboard/subscription/pending`
-                },
-                // auto_return: 'approved',
-                binary_mode: true, // Forces "Approved" or "Rejected", no "Pending". Helps in Sandbox.
-                external_reference: session.userId,
-                notification_url: `${appUrl}/api/webhooks/mercadopago`
+        await db.invoice.update({
+            where: {
+                id: invoiceId,
+                userId: session.userId
+            },
+            data: {
+                paymentStatus: newStatus,
+                paymentDate: newDate
             }
         })
 
-        if (result.init_point) {
-            return { success: true, url: result.init_point }
-        } else {
-            return { success: false, message: 'No se pudo generar el link de pago' }
-        }
+        revalidatePath('/dashboard/billing')
+        revalidatePath('/dashboard/clients')
+        return { success: true, newStatus }
+    } catch (error) {
+        console.error("Error toggling payment:", error)
+        return { success: false, message: 'Error al actualizar estado de pago' }
+    }
+}
 
-    } catch (error: any) {
-        console.error('MP Create Preference Error:', error)
-        return { success: false, message: 'Error al conectar con MercadoPago: ' + error.message }
+export async function markMultipleAsPaid(invoiceIds: string[]) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    try {
+        await db.invoice.updateMany({
+            where: {
+                id: { in: invoiceIds },
+                userId: session.userId
+            },
+            data: {
+                paymentStatus: 'PAID',
+                paymentDate: new Date()
+            }
+        })
+
+        revalidatePath('/dashboard/billing')
+        revalidatePath('/dashboard/clients')
+        return { success: true }
+    } catch (error) {
+        console.error("Error batch update:", error)
+        return { success: false, message: 'Error al actualizar facturas' }
     }
 }

@@ -251,7 +251,7 @@ export function ConfigForm({ initialConfig }: { initialConfig: any }) {
                                     </div>
                                 )}
                             </div>
-                            <p className="text-xs text-muted-foreground">Suba una imagen (PNG/JPG). Máx 200KB recomendado.</p>
+                            <p className="text-xs text-muted-foreground">Suba una imagen (PNG/JPG). Máx 200KB recomendado. Tamaño ideal: 200x72 px.</p>
                         </div>
 
                         <div className="space-y-1.5">

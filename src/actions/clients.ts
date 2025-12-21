@@ -229,3 +229,49 @@ export async function updateClientPrice(clientId: string, newPrice: number) {
         return { success: false, message: error.message }
     }
 }
+
+export async function updateClientName(clientId: string, newName: string) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    if (!newName || newName.trim().length === 0) {
+        return { success: false, message: 'El nombre no puede estar vacío' }
+    }
+
+    try {
+        await db.client.update({
+            where: {
+                id: clientId,
+                userId: session.userId
+            },
+            data: { name: newName }
+        })
+
+        revalidatePath('/dashboard/clients')
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error updating name:", error)
+        return { success: false, message: error.message }
+    }
+}
+
+export async function updateClientAddress(clientId: string, newAddress: string) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    try {
+        await db.client.update({
+            where: {
+                id: clientId,
+                userId: session.userId
+            },
+            data: { address: newAddress }
+        })
+
+        revalidatePath('/dashboard/clients')
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error updating address:", error)
+        return { success: false, message: error.message }
+    }
+}

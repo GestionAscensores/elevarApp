@@ -13,6 +13,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { ClientSearch } from '@/components/clients/client-search'
 import { ClientActions } from '@/components/clients/client-actions'
 import { ClientPriceCell } from '@/components/clients/client-price-cell'
+import { ClientNameCell } from '@/components/clients/client-name-cell'
+import { ClientAddressCell } from '@/components/clients/client-address-cell'
 import { toast } from 'sonner'
 
 interface ClientListProps {
@@ -132,12 +134,12 @@ export function ClientList({ initialClients }: ClientListProps) {
                                             />
                                         </TableCell>
                                         <TableCell className="font-medium">
-                                            <Link href={`/dashboard/clients/${client.id}`} className="hover:underline text-primary">
-                                                {client.name}
-                                            </Link>
+                                            <ClientNameCell clientId={client.id} initialName={client.name} />
                                         </TableCell>
                                         <TableCell>{client.cuit}</TableCell>
-                                        <TableCell>{client.address}</TableCell>
+                                        <TableCell>
+                                            <ClientAddressCell clientId={client.id} initialAddress={client.address} />
+                                        </TableCell>
                                         <TableCell>
                                             <ClientPriceCell clientId={client.id} initialPrice={totalAbono} />
                                         </TableCell>

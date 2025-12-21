@@ -10,8 +10,9 @@ import { EmailButton } from '@/components/billing/email-button'
 import { CreateCreditNoteButton } from '@/components/billing/nc-button'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Printer, Loader2, Copy } from 'lucide-react'
+import { Printer, Loader2, Copy, CheckCircle, DollarSign } from 'lucide-react'
 import { toast } from 'sonner'
+import { togglePaymentStatus, markMultipleAsPaid } from '@/actions/payments'
 
 export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
     const [selected, setSelected] = useState<string[]>([])
@@ -69,6 +70,37 @@ export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
         } finally {
             setLoading(false)
         }
+
+    }
+
+    // Bulk Pay Action
+    const handleBulkPay = async () => {
+        if (selected.length === 0) return
+        setLoading(true)
+        try {
+            const res = await markMultipleAsPaid(selected)
+            if (res.success) {
+                toast.success('Facturas marcadas como Pagadas')
+                setSelected([])
+            } else {
+                toast.error(res.message)
+            }
+        } catch (error) {
+            toast.error('Error al actualizar')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleTogglePayment = async (e: React.MouseEvent, id: string, currentStatus: string) => {
+        e.stopPropagation() // Prevent row click
+        // Optimistic update could go here but let's rely on server for now
+        const res = await togglePaymentStatus(id, currentStatus)
+        if (res.success) {
+            toast.success(res.newStatus === 'PAID' ? 'Marcada como Pagada' : 'Marcada como Impaga')
+        } else {
+            toast.error(res.message)
+        }
     }
 
     return (
@@ -77,10 +109,16 @@ export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
             {selected.length > 0 && (
                 <div className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
                     <span className="text-sm font-medium">{selected.length} seleccionadas</span>
-                    <Button size="sm" onClick={handleBulkPrint} disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
-                        Imprimir Seleccionadas
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button size="sm" variant="default" onClick={handleBulkPay} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <DollarSign className="mr-2 h-4 w-4" />}
+                            Marcar Pagadas
+                        </Button>
+                        <Button size="sm" onClick={handleBulkPrint} disabled={loading} variant="outline">
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                            Imprimir
+                        </Button>
+                    </div>
                 </div>
             )}
 
@@ -136,7 +174,20 @@ export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
                                 <TableCell className="font-mono text-xs">{inv.cae}</TableCell>
                                 <TableCell className="text-right font-bold">${Number(inv.totalAmount).toFixed(2)}</TableCell>
                                 <TableCell className="text-right">
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Aprobada</Badge>
+                                    <div
+                                        className="inline-flex cursor-pointer"
+                                        onClick={(e) => handleTogglePayment(e, inv.id, inv.paymentStatus || 'PENDING')}
+                                    >
+                                        {inv.paymentStatus === 'PAID' ? (
+                                            <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">
+                                                Pagada
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="outline" className="text-yellow-700 bg-yellow-50 border-yellow-200 hover:bg-yellow-100">
+                                                Impaga
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">

@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormStatus, useFormState } from 'react-dom'
+import { useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { createMassInvoices } from '@/actions/billing-mass'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,7 +34,7 @@ type Props = {
 }
 
 export function MassInvoiceForm({ clients }: Props) {
-    const [state, action] = useFormState(createMassInvoices, undefined)
+    const [state, action] = useActionState(createMassInvoices, undefined)
     const router = useRouter()
     const [selectedClients, setSelectedClients] = useState<string[]>([])
 
@@ -157,76 +158,178 @@ export function MassInvoiceForm({ clients }: Props) {
                         <CardDescription>Configurar qué se va a facturar.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form action={action} className="space-y-4">
-                            <input type="hidden" name="clientIds" value={JSON.stringify(selectedClients)} />
-                            <input type="hidden" name="items" value={itemsJson} />
+                        <div className="flex flex-col gap-4">
+                            <form action={action} className="space-y-4">
+                                <input type="hidden" name="clientIds" value={JSON.stringify(selectedClients)} />
+                                <input type="hidden" name="items" value={itemsJson} />
 
-                            {/* Switch to enable client fee */}
-                            <div className="flex items-center space-x-2 border p-3 rounded-md bg-muted/20">
-                                <Switch
-                                    id="use-fee"
-                                    checked={useClientFee}
-                                    onCheckedChange={setUseClientFee}
-                                    name="useClientFee"
-                                />
-                                <Label htmlFor="use-fee" className="cursor-pointer">Usar precio de Abono</Label>
-                            </div>
+                                {/* Switch to enable client fee */}
+                                <div className="flex items-center space-x-2 border p-3 rounded-md bg-muted/20">
+                                    <Switch
+                                        id="use-fee"
+                                        checked={useClientFee}
+                                        onCheckedChange={setUseClientFee}
+                                        name="useClientFee"
+                                    />
+                                    <Label htmlFor="use-fee" className="cursor-pointer">Usar precio de Abono</Label>
+                                </div>
 
-                            <div className="space-y-2">
-                                <Label>Descripción Base</Label>
-                                <Input value={description} onChange={e => setDescription(e.target.value)} />
-                            </div>
+                                <div className="space-y-2">
+                                    <Label>Descripción Base</Label>
+                                    <Input value={description} onChange={e => setDescription(e.target.value)} />
+                                </div>
 
-                            <div className="space-y-2">
-                                <Label>Mes a Facturar</Label>
-                                <Input
-                                    type="month"
-                                    name="date"
-                                    value={month}
-                                    onChange={(e) => setMonth(e.target.value)}
-                                    required
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Se facturará: <strong>{description} correspondiente al mes de {monthName}</strong>
-                                </p>
-                            </div>
+                                <div className="space-y-2">
+                                    <Label>Mes a Facturar</Label>
+                                    <Input
+                                        type="month"
+                                        name="date"
+                                        value={month}
+                                        onChange={(e) => setMonth(e.target.value)}
+                                        required
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Se facturará: <strong>{description} correspondiente al mes de {monthName}</strong>
+                                    </p>
+                                </div>
 
-                            <div className="space-y-2">
-                                <Label>Precio Unitario</Label>
-                                <Input
-                                    type="number"
-                                    step="0.01"
-                                    value={useClientFee ? 0 : price}
-                                    onChange={e => setPrice(Number(e.target.value))}
-                                    disabled={useClientFee}
-                                    placeholder={useClientFee ? "Variable según cliente" : "0.00"}
-                                    className={useClientFee ? "bg-muted text-muted-foreground" : ""}
-                                />
-                                {useClientFee && <p className="text-xs text-muted-foreground">Se tomará el abono de cada cliente.</p>}
-                            </div>
+                                <div className="space-y-2">
+                                    <Label>Precio Unitario</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={useClientFee ? 0 : price}
+                                        onChange={e => setPrice(Number(e.target.value))}
+                                        disabled={useClientFee}
+                                        placeholder={useClientFee ? "Variable según cliente" : "0.00"}
+                                        className={useClientFee ? "bg-muted text-muted-foreground" : ""}
+                                    />
+                                    {useClientFee && <p className="text-xs text-muted-foreground">Se tomará el abono de cada cliente.</p>}
+                                </div>
 
-                            <div className="space-y-2">
-                                <Label>Alicuota IVA</Label>
-                                <Select value={ivaRate} onValueChange={setIvaRate}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="21">21%</SelectItem>
-                                        <SelectItem value="10.5">10.5%</SelectItem>
-                                        <SelectItem value="0">0%</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                <div className="space-y-2">
+                                    <Label>Alicuota IVA</Label>
+                                    <Select value={ivaRate} onValueChange={setIvaRate}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="21">21%</SelectItem>
+                                            <SelectItem value="10.5">10.5%</SelectItem>
+                                            <SelectItem value="0">0%</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                            <div className="pt-4">
-                                <SubmitButton count={selectedClients.length} />
-                            </div>
-                        </form>
+                                <div className="pt-4">
+                                    <SubmitButton count={selectedClients.length} />
+                                </div>
+                            </form>
+
+                            <hr className="my-2 border-dashed" />
+
+                            <AutoBillingSchedulerDialog
+                                selectedClients={selectedClients}
+                                totalClients={clients.length}
+                            />
+                        </div>
                     </CardContent>
                 </Card>
             </div>
         </div>
+    )
+}
+
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+    DialogClose
+} from "@/components/ui/dialog"
+import { updateAutoBillingConfig } from '@/actions/billing-mass'
+
+function AutoBillingSchedulerDialog({ selectedClients, totalClients }: { selectedClients: string[], totalClients: number }) {
+    const [open, setOpen] = useState(false)
+    const [autoBillingEnabled, setAutoBillingEnabled] = useState(false)
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin hidden" />
+                    Programar Recurrencia Automática
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Programar Facturación Automática</DialogTitle>
+                    <DialogDescription>
+                        El sistema generará borradores automáticamente todos los meses para los clientes seleccionados.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form action={async (formData) => {
+                    formData.append('selectedClients', JSON.stringify(selectedClients))
+                    const res = await updateAutoBillingConfig(formData)
+                    if (res.success) {
+                        toast.success('Configuración guardada')
+                        setOpen(false)
+                    } else {
+                        toast.error(res.message || 'Error al guardar')
+                    }
+                }} className="space-y-4 py-4">
+
+                    <div className="flex items-center justify-between border p-3 rounded-md bg-muted/20">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="autoBillingEnabled" className="text-base">Activar Automático</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Generar cada mes.
+                            </p>
+                        </div>
+                        <Switch
+                            id="autoBillingEnabled"
+                            name="autoBillingEnabled"
+                            defaultChecked={false}
+                        />
+                    </div>
+
+                    <div className="grid w-full items-center gap-1.5">
+                        <Label htmlFor="autoBillingDay">Día de Generación</Label>
+                        <Select name="autoBillingDay" defaultValue="1">
+                            <SelectTrigger>
+                                <SelectValue placeholder="Día del mes" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                                    <SelectItem key={day} value={String(day)}>Día {day}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">Se generarán borradores correspondientes al <strong>mes anterior</strong>.</p>
+                    </div>
+
+                    <div className="bg-blue-50 p-3 rounded-md border border-blue-100 text-sm text-blue-800">
+                        <p className="font-semibold mb-1">Clientes Destino:</p>
+                        <ul className="list-disc list-inside">
+                            <li>Se activará para: <strong>{selectedClients.length} clientes seleccionados</strong>.</li>
+                            <li>Se desactivará para: <strong>{totalClients - selectedClients.length} clientes no seleccionados</strong>.</li>
+                        </ul>
+                        <p className="mt-2 text-xs">Esta acción actualizará la preferencia de "Incluir en masiva" de cada cliente.</p>
+                    </div>
+
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="ghost" type="button">Cancelar</Button>
+                        </DialogClose>
+                        <Button type="submit">Guardar Programación</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     )
 }
 

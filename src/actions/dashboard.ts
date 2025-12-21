@@ -109,13 +109,21 @@ export async function getDashboardMetrics() {
         exchangeRate: Number(inv.exchangeRate || 1),
     }))
 
+    // 5. Pending Drafts Count
+    const pendingDraftsCount = await db.invoice.count({
+        where: {
+            userId: userId,
+            status: 'DRAFT'
+        }
+    })
+
     return {
         totalBilled: Number(currentMonthInvoices._sum.totalAmount || 0),
         invoicesCount: currentMonthInvoices._count,
         totalClients: totalClientsCount, // Or active based on distinct
         activeClients: distinctClients.length,
-        activeClients: distinctClients.length,
         chartData,
-        recentInvoices: serializedRecentInvoices
+        recentInvoices: serializedRecentInvoices,
+        pendingDrafts: pendingDraftsCount
     }
 }

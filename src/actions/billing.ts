@@ -800,6 +800,73 @@ export async function createCreditNote(invoiceId: string) {
     }
 }
 
+export async function deleteInvoices(ids: string[]) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    let successCount = 0
+    let failCount = 0
+    const errors: string[] = []
+
+    for (const id of ids) {
+        // Reuse single delete logic to keep consistency
+        const res = await deleteInvoice(id)
+        if (res.success) {
+            successCount++
+        } else {
+            failCount++
+            errors.push(`ID ${id}: ${res.message}`)
+        }
+    }
+
+    if (failCount === 0) {
+        return { success: true, message: `Se eliminaron ${successCount} borradores.` }
+    } else {
+        return {
+            success: successCount > 0, // Partial success is still success-ish
+            message: `Eliminados: ${successCount}. Fallidos: ${failCount}`,
+            errors
+        }
+    }
+}
+
+export async function emitInvoices(ids: string[]) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    let successCount = 0
+    let failCount = 0
+    const errors: string[] = []
+
+    // Must be sequential to avoid AFIP sequence collisions (CbteNro)
+    for (const id of ids) {
+        try {
+            const res = await emitInvoice(id)
+            if (res.success) {
+                successCount++
+            } else {
+                failCount++
+                errors.push(`ID ${id}: ${res.message}`)
+            }
+        } catch (e: any) {
+            failCount++
+            errors.push(`ID ${id}: ${e.message}`)
+        }
+    }
+
+    if (failCount === 0) {
+        revalidatePath('/dashboard/billing')
+        return { success: true, message: `Se emitieron ${successCount} facturas.` }
+    } else {
+        revalidatePath('/dashboard/billing')
+        return {
+            success: successCount > 0,
+            message: `Emitidos: ${successCount}. Fallidos: ${failCount}`,
+            errors
+        }
+    }
+}
+
 export async function handleInvoiceAction(prevState: any, formData: FormData) {
     const action = formData.get('_action')
     if (action === 'save_quote') {

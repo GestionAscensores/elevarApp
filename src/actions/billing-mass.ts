@@ -4,7 +4,6 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { verifySession } from '@/lib/session'
 import { revalidatePath } from 'next/cache'
-import { createInvoice } from './billing'
 
 const MassInvoiceSchema = z.object({
     clientIds: z.string(), // JSON array of strings
@@ -15,18 +14,25 @@ const MassInvoiceSchema = z.object({
 
 export async function createMassInvoices(prevState: any, formData: FormData) {
     const session = await verifySession()
-    if (!session) return { message: 'No autorizado' }
+    if (!session) return { success: false, message: 'No autorizado' }
 
     const data = Object.fromEntries(formData)
     const result = MassInvoiceSchema.safeParse(data)
 
     if (!result.success) {
-        return { errors: result.error.flatten().fieldErrors }
+        return { success: false, errors: result.error.flatten().fieldErrors, message: 'Datos inválidos' }
     }
 
     const clientIds = JSON.parse(result.data.clientIds) as string[]
-    const itemsTemplate = JSON.parse(result.data.items) // Array of items
-    const useClientFee = result.data.useClientFee === 'on'
+    // If specific date provided, use it. Else default to current.
+    // formData date is usually "YYYY-MM"
+    const [year, month] = (result.data.date || new Date().toISOString().slice(0, 7)).split('-').map(Number);
+
+    return createMassInvoicesAction(session.userId, clientIds, result.data.useClientFee === 'on', result.data.items, year, month)
+}
+
+async function createMassInvoicesAction(userId: string, clientIds: string[], useClientFee: boolean, itemsTemplateJson: string, year: number, month: number) {
+    const itemsTemplate = JSON.parse(itemsTemplateJson)
 
     const results = {
         successCount: 0,
@@ -34,8 +40,8 @@ export async function createMassInvoices(prevState: any, formData: FormData) {
         errors: [] as string[]
     }
 
-    const config = await db.userConfig.findUnique({ where: { userId: session.userId } })
-    if (!config) return { message: 'Falta configuración de punto de venta.' }
+    const config = await db.userConfig.findUnique({ where: { userId } })
+    if (!config) return { success: false, message: 'Falta configuración de punto de venta.' }
 
     const ptoVta = config.salePoint
 
@@ -49,20 +55,14 @@ export async function createMassInvoices(prevState: any, formData: FormData) {
 
             const type = client.ivaCondition === 'Responsable Inscripto' ? 'A' : 'C'
 
-            const dateObj = result.data.date ? new Date(result.data.date + '-05') : new Date(); // YYYY-MM format?
-            // Actually result.data.date comes from type="month" input usually, so 'YYYY-MM'.
-            // Let's ensure we parse it right.
-            const [year, month] = (result.data.date || new Date().toISOString().slice(0, 7)).split('-').map(Number);
-
             // Service Dates
             const serviceFrom = new Date(year, month - 1, 1);
             const serviceTo = new Date(year, month, 0); // Last day of month
 
             // Payment Due: Last day of CURRENT month
-            const now = new Date();
-            const paymentDue = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            const paymentDue = new Date(year, month, 0);
 
-            // Month Name for Description (Needed for Equipment Description generation)
+            // Month Name
             const monthName = serviceFrom.toLocaleString('es-AR', { month: 'long' });
             const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
@@ -74,9 +74,7 @@ export async function createMassInvoices(prevState: any, formData: FormData) {
             if (useClientFee) {
                 if (client.items && client.items.length > 0) {
                     invoiceItems = client.items.map((eq: any) => {
-                        // "tareas de manteniento correspondietes un equipo (descripto en clientes) al mes de ...(mes seleccionado)"
                         return {
-                            // "Servicio de Mantenimiento - Tipo - Mes"
                             description: `Servicio de Mantenimiento - ${eq.type} - ${capitalizedMonth}`,
                             quantity: eq.quantity,
                             price: eq.price,
@@ -84,7 +82,6 @@ export async function createMassInvoices(prevState: any, formData: FormData) {
                         }
                     })
                 } else {
-                    // Fallback if no equipment?
                     const templateItem = itemsTemplate[0] || { description: 'Abono', ivaRate: 21, price: 0 }
                     invoiceItems = [{
                         ...templateItem,
@@ -100,11 +97,9 @@ export async function createMassInvoices(prevState: any, formData: FormData) {
                 }))
             }
 
-            // Calculate Totals (Draft calculation)
+            // Calculate Totals
             let impNeto = 0
             let impIVA = 0
-            let impTotal = 0
-
             for (const item of invoiceItems) {
                 const q = Number(item.quantity)
                 const p = Number(item.price)
@@ -118,28 +113,25 @@ export async function createMassInvoices(prevState: any, formData: FormData) {
                     impIVA += sub * (rate / 100)
                 }
             }
-            impTotal = impNeto + impIVA
-
-            // Draft Number? 0 for now.
-            // CAI/CAE null.
+            const impTotal = impNeto + impIVA
 
             await db.invoice.create({
                 data: {
-                    userId: session.userId,
+                    userId,
                     clientId,
                     type,
                     pointOfSale: ptoVta,
-                    number: 0, // 0 indicates draft/unassigned
+                    number: 0,
                     date: new Date(),
                     status: 'DRAFT',
                     netAmount: impNeto,
                     ivaAmount: impIVA,
                     totalAmount: impTotal,
-                    concept: 2, // Servicios
+                    concept: 2,
                     serviceFrom,
                     serviceTo,
-                    paymentDue, // Optional but good to have
-                    paymentCondition: 'Transferencia', // Default requested
+                    paymentDue,
+                    paymentCondition: 'Transferencia',
                     items: {
                         create: invoiceItems.map((item: any) => ({
                             description: item.description,
@@ -166,5 +158,103 @@ export async function createMassInvoices(prevState: any, formData: FormData) {
         return { success: true, message: `Se generaron ${results.successCount} borradores correctamente.` }
     } else {
         return { success: false, message: `Generados: ${results.successCount}. Fallidos: ${results.failCount}`, errors: results.errors }
+    }
+}
+
+export async function generateAutoBillingInternal(userId: string) {
+    // 1. Get all clients not excluded
+    const clients = await db.client.findMany({
+        where: { userId, excludeFromMassUpdate: false },
+        select: { id: true }
+    })
+
+    if (clients.length === 0) return { success: true, count: 0 }
+
+    const clientIds = clients.map(c => c.id)
+
+    // 2. Determine Dates (Previous Month - Mes Vencido)
+    const now = new Date()
+    const billingDate = new Date(now)
+    billingDate.setMonth(now.getMonth() - 1) // Go back 1 month
+
+    const year = billingDate.getFullYear()
+    const month = billingDate.getMonth() + 1 // 1-12
+
+    // 3. Mock Items Template (Standard 21%)
+    const mockItems = JSON.stringify([{ description: 'Abono', ivaRate: 21, price: 0 }])
+
+    // Cleanup: Delete existing DRAFTS for this period (Service From)
+    // To ensure idempotency and prevent duplicates if run multiple times.
+    const serviceFrom = new Date(year, month - 1, 1);
+
+    await db.invoice.deleteMany({
+        where: {
+            userId,
+            status: 'DRAFT',
+            serviceFrom: serviceFrom,
+            // Only delete drafts for the clients we are about to bill? 
+            // Or all auto-generated ones? 
+            // Safest: Delete drafts for the specific clients involved in this run.
+            clientId: { in: clientIds }
+        }
+    })
+
+    // 4. Call Shared Action
+    // useClientFee = true
+    return createMassInvoicesAction(userId, clientIds, true, mockItems, year, month)
+}
+
+export async function updateAutoBillingConfig(formData: FormData) {
+    const session = await verifySession()
+    if (!session) return { success: false, message: 'No autorizado' }
+
+    const autoBillingEnabled = formData.get('autoBillingEnabled') === 'on'
+    const autoBillingDay = Number(formData.get('autoBillingDay')) || 1
+    const selectedClientsJson = formData.get('selectedClients') as string
+
+    let selectedClients: string[] = []
+    try {
+        selectedClients = JSON.parse(selectedClientsJson)
+    } catch (e) {
+        return { success: false, message: 'Error en lista de clientes' }
+    }
+
+    try {
+        // 1. Update User Config
+        // @ts-ignore - Prisma types update pending
+        await db.userConfig.upsert({
+            where: { userId: session.userId },
+            create: {
+                userId: session.userId,
+                autoBillingEnabled,
+                autoBillingDay
+            },
+            update: {
+                autoBillingEnabled,
+                autoBillingDay
+            }
+        })
+
+        // 2. Update all clients Exclude Status
+        await db.$transaction([
+            // Exclude ALL first (reset)
+            db.client.updateMany({
+                where: { userId: session.userId },
+                data: { excludeFromMassUpdate: true }
+            }),
+            // Include Selected (if any)
+            ...(selectedClients.length > 0 ? [db.client.updateMany({
+                where: {
+                    userId: session.userId,
+                    id: { in: selectedClients }
+                },
+                data: { excludeFromMassUpdate: false }
+            })] : [])
+        ])
+
+        return { success: true, message: 'Configuración actualizada correctamente' }
+    } catch (error: any) {
+        console.error('Error updating auto billing:', error)
+        return { success: false, message: `Error interno: ${error.message}` }
     }
 }

@@ -58,6 +58,15 @@ export async function updateConfig(prevState: any, formData: FormData) {
     updateData.businessEmail = email // Map the form 'email' field to businessEmail in config
     updateData.logoUrl = logoUrl
 
+    // Auto Billing
+    const autoBillingEnabled = formData.get('autoBillingEnabled') === 'on'
+    const autoBillingDay = formData.get('autoBillingDay')
+
+    updateData.autoBillingEnabled = autoBillingEnabled
+    if (autoBillingDay) {
+        updateData.autoBillingDay = Number(autoBillingDay)
+    }
+
     if (cert && cert.trim().length > 0) {
         updateData.certEncrypted = encryptData(cert)
     }
