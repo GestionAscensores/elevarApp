@@ -50,7 +50,7 @@ export function CleanupZone() {
                     <div className="space-y-1">
                         <h4 className="font-medium text-sm">Reiniciar Facturación (Mis Datos)</h4>
                         <p className="text-xs text-muted-foreground">
-                            Elimina <strong>todas</strong> las facturas y recibos de TU cuenta.
+                            Elimina <strong>todas</strong> las facturas, recibos e historial de precios.
                             Mantiene clientes y productos.
                             <br />Use esto antes de pasar a Producción.
                         </p>
@@ -69,7 +69,7 @@ export function CleanupZone() {
                                     ¿Estás absolutamente seguro?
                                 </DialogTitle>
                                 <DialogDescription className="space-y-3 pt-2">
-                                    <p>Esta acción eliminará permanentemente todas las <strong>Facturas</strong> y <strong>Recibos</strong> emitidos por tu cuenta.</p>
+                                    <p>Esta acción eliminará permanentemente todas las <strong>Facturas</strong>, <strong>Recibos</strong> e <strong>Historial de Precios</strong> de tu cuenta.</p>
                                     <p>Los Clientes y Productos NO se eliminarán.</p>
                                     <p className="font-bold text-black dark:text-white">Esta acción NO se puede deshacer.</p>
                                 </DialogDescription>

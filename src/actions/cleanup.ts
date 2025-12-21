@@ -33,6 +33,13 @@ export async function resetAccountData(confirmation: string) {
             // The user only said "arrancar en serio con la facturación".
             // Clients/Products are kept.
 
+            // Reset Price History (Requested for production transition)
+            await tx.priceHistory.deleteMany({
+                where: {
+                    client: { userId: session.userId }
+                }
+            })
+
             // Reset counters?
             await tx.userConfig.update({
                 where: { userId: session.userId },
