@@ -58,7 +58,7 @@ export default async function DashboardPage() {
                         </Link>
                     </Button>
                     <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
-                        <Link href="/dashboard/billing/budgets/new">
+                        <Link href="/dashboard/billing/new?type=quote">
                             <Plus className="mr-2 h-4 w-4" /> Nuevo Presupuesto
                         </Link>
                     </Button>
