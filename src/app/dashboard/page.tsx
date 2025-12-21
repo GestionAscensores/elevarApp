@@ -8,11 +8,10 @@ import { getPriceChartData } from "@/actions/pricing"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Plus } from "lucide-react"
+import { Plus, Building, Calculator } from "lucide-react"
 import { MonotributoCard } from "@/components/dashboard/monotributo-card"
 import { MassUpdatePrices } from "@/components/pricing/mass-update-prices"
 import { PriceHistoryChart } from "@/components/pricing/price-history-chart"
-import { QuickActions } from "@/components/dashboard/quick-actions"
 import { TrialGauge } from "@/components/dashboard/trial-gauge"
 
 export default async function DashboardPage() {
@@ -50,10 +49,19 @@ export default async function DashboardPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                <div className="flex items-center space-x-2">
-                    {/* Header Button kept as primary CTA */}
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/clients/new">
+                            <Building className="mr-2 h-4 w-4" /> Nuevo Edificio
+                        </Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/billing/budgets/new">
+                            <Calculator className="mr-2 h-4 w-4" /> Nuevo Presupuesto
+                        </Link>
+                    </Button>
                     <Button asChild>
                         <Link href="/dashboard/billing/new">
                             <Plus className="mr-2 h-4 w-4" /> Nueva Factura
@@ -61,8 +69,6 @@ export default async function DashboardPage() {
                     </Button>
                 </div>
             </div>
-
-            <QuickActions />
 
             <DashboardStats />
 
