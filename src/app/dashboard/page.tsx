@@ -53,18 +53,18 @@ export default async function DashboardPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                 <div className="flex items-center gap-2">
                     <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
-                        <Link href="/dashboard/clients/new">
-                            <Building className="mr-2 h-4 w-4" /> Nuevo Edificio
+                        <Link href="/dashboard/billing/new">
+                            <Plus className="mr-2 h-4 w-4" /> Nueva Factura
                         </Link>
                     </Button>
                     <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
                         <Link href="/dashboard/billing/budgets/new">
-                            <Calculator className="mr-2 h-4 w-4" /> Nuevo Presupuesto
+                            <Plus className="mr-2 h-4 w-4" /> Nuevo Presupuesto
                         </Link>
                     </Button>
                     <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
-                        <Link href="/dashboard/billing/new">
-                            <Plus className="mr-2 h-4 w-4" /> Nueva Factura
+                        <Link href="/dashboard/clients/new">
+                            <Plus className="mr-2 h-4 w-4" /> Nuevo Edificio
                         </Link>
                     </Button>
                 </div>
