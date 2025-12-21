@@ -10,7 +10,13 @@ import { verifySession } from '@/lib/session'
 
 export default async function NewInvoicePage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const clients = await getClients()
-    const products = await getProducts()
+    const rawProducts = await getProducts()
+    // Serialize products for Client Component
+    const products = rawProducts.map(p => ({
+        ...p,
+        price: Number(p.price),
+        ivaRate: String(p.ivaRate)
+    }))
     const session = await verifySession()
 
     const sp = await searchParams
