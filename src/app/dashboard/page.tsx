@@ -52,17 +52,17 @@ export default async function DashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" asChild>
+                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
                         <Link href="/dashboard/clients/new">
                             <Building className="mr-2 h-4 w-4" /> Nuevo Edificio
                         </Link>
                     </Button>
-                    <Button variant="outline" asChild>
+                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
                         <Link href="/dashboard/billing/budgets/new">
                             <Calculator className="mr-2 h-4 w-4" /> Nuevo Presupuesto
                         </Link>
                     </Button>
-                    <Button asChild>
+                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
                         <Link href="/dashboard/billing/new">
                             <Plus className="mr-2 h-4 w-4" /> Nueva Factura
                         </Link>
