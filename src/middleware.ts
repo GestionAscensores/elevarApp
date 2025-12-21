@@ -1,5 +1,8 @@
-import { auth } from "@/lib/auth"
+import NextAuth from "next-auth"
+import { authConfig } from "@/lib/auth.config"
 import { NextResponse } from "next/server"
+
+const { auth } = NextAuth(authConfig)
 
 export default auth(async (req) => {
     const token = req.auth
@@ -38,19 +41,8 @@ export default auth(async (req) => {
     // @ts-ignore
     const userSubExpires = token?.subscriptionExpiresAt || customSession?.expiresAt
 
-    console.log("🔒 MIDDLEWARE CHECK:", {
-        path,
-        hasToken: !!token,
-        hasCustomSession: !!customSession,
-        role: userRole,
-        status: userSubStatus,
-        tokenStatus: (token as any)?.subscriptionStatus,
-        customStatus: customSession?.subscriptionStatus
-    })
-
-    // Wait, session payload doesn't have subscription info! 
-    // We need to add it to session creation or fetch it. Fetching in middleware is expensive/tricky (no db access on edge usually).
-    // For now, let's fix the LOGIN loop first. Access control for custom sessions might be loose until we add claims to the JWT.
+    // Log omitted for cleaner production logs, or kept for debugging
+    // console.log("🔒 MIDDLEWARE CHECK:", { path, role: userRole })
 
     // Admin routes - only for ADMIN role
     if (path.startsWith("/admin")) {
@@ -88,7 +80,7 @@ export default auth(async (req) => {
             if (trialEndsAt) {
                 const expiryDate = new Date(trialEndsAt)
                 if (expiryDate < new Date()) {
-                    console.log("Blocking expired trial user", { expiryDate })
+                    // console.log("Blocking expired trial user", { expiryDate })
                     return NextResponse.redirect(new URL("/dashboard/subscription", req.url))
                 }
             }
@@ -108,5 +100,5 @@ export default auth(async (req) => {
 })
 
 export const config = {
-    matcher: ["/dashboard/:path*", "/admin/:path*"]
+    matcher: ["/dashboard/:path*", "/admin/:path*", "/verify-email"]
 }
