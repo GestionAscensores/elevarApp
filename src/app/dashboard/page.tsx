@@ -1,6 +1,6 @@
 import { DashboardStats } from "@/components/dashboard/dashboard-stats"
 import { OverviewChart } from "@/components/dashboard/overview-chart"
-import { TrialBanner } from "@/components/dashboard/trial-banner"
+// import { TrialBanner } from "@/components/dashboard/trial-banner" // Replaced by Gauge
 import { verifySession } from "@/lib/session"
 import { db } from "@/lib/db"
 import { getDashboardMetrics } from "@/actions/dashboard"
@@ -12,11 +12,10 @@ import { Plus } from "lucide-react"
 import { MonotributoCard } from "@/components/dashboard/monotributo-card"
 import { MassUpdatePrices } from "@/components/pricing/mass-update-prices"
 import { PriceHistoryChart } from "@/components/pricing/price-history-chart"
+import { QuickActions } from "@/components/dashboard/quick-actions"
+import { TrialGauge } from "@/components/dashboard/trial-gauge"
 
 export default async function DashboardPage() {
-    // We can fetch complex charts here or inside components.
-    // DashboardStats handles the top cards.
-    // We still need metrics for the chart and recent invoices if not moved to components.
     const session = await verifySession()
 
     let subscriptionData = null
@@ -32,12 +31,16 @@ export default async function DashboardPage() {
 
         subscriptionData = user
 
-        // Self-healing: If trial but no date, fix it now
+        // Self-healing: If trial but no date, fix it now (15 days)
         if (subscriptionData?.subscriptionStatus === 'trial' && !subscriptionData.trialEndsAt) {
             console.log("Self-fixing missing trial date for user:", session.userId)
             const newDate = new Date()
-            newDate.setDate(newDate.getDate() + 30) // 30 days from now
+            newDate.setDate(newDate.getDate() + 15) // 15 days from now
 
+            await db.user.update({
+                where: { id: session.userId },
+                data: { trialEndsAt: newDate }
+            })
             subscriptionData.trialEndsAt = newDate
         }
     }
@@ -50,6 +53,7 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                 <div className="flex items-center space-x-2">
+                    {/* Header Button kept as primary CTA */}
                     <Button asChild>
                         <Link href="/dashboard/billing/new">
                             <Plus className="mr-2 h-4 w-4" /> Nueva Factura
@@ -58,19 +62,17 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            {subscriptionData && (
-                <TrialBanner
-                    trialEndsAt={subscriptionData.trialEndsAt}
-                    status={subscriptionData.subscriptionStatus}
-                />
-            )}
+            <QuickActions />
 
-
-            {/* Replaced manual cards with component */}
             <DashboardStats />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <div className="col-span-full">
+                {/* Trial Gauge - Only show if in trial */}
+                {subscriptionData?.subscriptionStatus === 'trial' && subscriptionData?.trialEndsAt && (
+                    <TrialGauge trialEndsAt={subscriptionData.trialEndsAt} />
+                )}
+
+                <div className={subscriptionData?.subscriptionStatus === 'trial' ? "col-span-full lg:col-span-4" : "col-span-full"}>
                     <MonotributoCard />
                 </div>
             </div>
@@ -82,7 +84,6 @@ export default async function DashboardPage() {
                         <CardDescription>Resumen de facturación del último semestre.</CardDescription>
                     </CardHeader>
                     <CardContent className="pl-2">
-                        {/* Assuming OverviewChart expects data in specific format */}
                         {metrics ? <OverviewChart data={metrics.chartData} /> : <p className="text-sm text-muted-foreground p-4">Cargando gráfico...</p>}
                     </CardContent>
                 </Card>
@@ -91,7 +92,7 @@ export default async function DashboardPage() {
                     <CardHeader>
                         <CardTitle>Últimas Facturas</CardTitle>
                         <CardDescription>
-                            Recent transactions.
+                            Transacciones recientes.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

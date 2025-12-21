@@ -50,6 +50,23 @@ export async function login(prevState: any, formData: FormData) {
         }
     }
 
+    // [FIX] Bug A: Prevent login if email is not verified
+    if (!user.isEmailVerified) {
+        // Option 1: Redirect to verification
+        // We might need to resend the code here or rely on the user having it?
+        // Let's at least block access.
+        // Ideally, we redirect to a page that says "Check your email".
+        // For now, we redirect to the verify page directly.
+        // We need to ensure a verification code exists or generate one?
+        // Let's just redirect and let the verify page handle logic (or they can click 'resend').
+
+        // Ensure we send a new code just in case?
+        // const { sendEmailVerificationCode } = await import('./verification')
+        // await sendEmailVerificationCode(user.id)
+
+        redirect('/verify-email')
+    }
+
     await createSession(
         user.id,
         user.cuit || '',
@@ -94,6 +111,8 @@ export async function register(prevState: any, formData: FormData) {
         return { errors }
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10)
+
     // Check if user already exists (CUIT or email)
     const existingUser = await db.user.findFirst({
         where: {
@@ -105,6 +124,34 @@ export async function register(prevState: any, formData: FormData) {
     })
 
     if (existingUser) {
+        // [FIX] Bug B: If user exists but is NOT verified, allow "overwriting" (re-registering)
+        if (!existingUser.isEmailVerified) {
+            // Update password and info
+            await db.user.update({
+                where: { id: existingUser.id },
+                data: {
+                    cuit: normalizedCuit,
+                    password: hashedPassword,
+                    // Re-set trial or keep existing? Keep existing creation date but update password.
+                }
+            })
+
+            // Resend code and redirect
+            const { sendEmailVerificationCode } = await import('./verification')
+            await sendEmailVerificationCode(existingUser.id)
+
+            // Ensure session exists for the verify page context?
+            // The logic below creates a session for the NEW user. We should do it for the EXISTING one.
+            await createSession(
+                existingUser.id,
+                normalizedCuit || existingUser.cuit || '',
+                existingUser.role,
+                existingUser.subscriptionStatus,
+                existingUser.trialEndsAt
+            )
+            redirect('/verify-email')
+        }
+
         if (normalizedCuit && existingUser.cuit === normalizedCuit) {
             return { message: 'Ya existe un usuario con este CUIT.' }
         }
@@ -112,8 +159,6 @@ export async function register(prevState: any, formData: FormData) {
             return { message: 'Ya existe un usuario con este email.' }
         }
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10)
 
     // Create user - NOT verified yet
     const newUser = await db.user.create({
@@ -150,4 +195,9 @@ export async function register(prevState: any, formData: FormData) {
 export async function logout() {
     await deleteSession()
     redirect('/login')
+}
+
+export async function cancelVerification() {
+    await deleteSession()
+    redirect('/register')
 }

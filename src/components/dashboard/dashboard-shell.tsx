@@ -2,14 +2,21 @@
 
 import Link from 'next/link'
 import {
-    Users,
+    Building, // Icon for Edificios
     FileText,
     Settings,
     CreditCard,
     LayoutDashboard,
     LogOut,
     Menu,
-    ChevronDown
+    ChevronDown,
+    Users, // Re-added for Admin
+    FilePlus, // New Invoice
+    FileStack, // Budgets
+    Archive, // Archived
+    Receipt, // Receipts
+    FileDiff // Credit Note
+    // Activity
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -29,6 +36,10 @@ interface DashboardShellProps {
         name?: string | null
         email?: string | null
         role: string
+        config?: {
+            fantasyName?: string | null
+            businessName?: string | null
+        } | null
     } | null
 }
 
@@ -40,21 +51,22 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
             label: 'Facturación',
             icon: FileText,
             children: [
-                { href: '/dashboard/billing/invoices', label: 'Facturas' },
-                { href: '/dashboard/billing/budgets', label: 'Presupuestos' },
-                { href: '/dashboard/billing/archived', label: 'Archivadas sin emitir' },
-                { href: '/dashboard/billing/credit-notes', label: 'Notas de Crédito' },
-                { href: '/dashboard/receipts', label: 'Recibos' },
+                { href: '/dashboard/billing/invoices', label: 'Facturas', icon: FilePlus },
+                { href: '/dashboard/billing/budgets', label: 'Presupuestos', icon: FileStack },
+                { href: '/dashboard/billing/archived', label: 'Archivadas sin emitir', icon: Archive },
+                { href: '/dashboard/billing/credit-notes', label: 'Notas de Crédito', icon: FileDiff },
+                { href: '/dashboard/receipts', label: 'Recibos', icon: Receipt },
             ]
         },
-        { href: '/dashboard/clients', label: 'Clientes', icon: Users },
-        { href: '/dashboard/pricing', label: 'Precios', icon: CreditCard },
+        // Change "Clientes" to "Edificios" with Building Icon
+        { href: '/dashboard/clients', label: 'Edificios', icon: Building },
+        { href: '/dashboard/pricing', label: 'Inventario', icon: CreditCard },
         { href: '/dashboard/config', label: 'Configuración', icon: Settings },
     ]
 
     // Admin nav item
     if (user?.role === 'ADMIN') {
-        navItems.push({ href: '/dashboard/admin/users', label: 'Administración', icon: Users })
+        navItems.push({ href: '/dashboard/admin', label: 'Admin', icon: Users })
     }
 
     const handleSignOut = async () => {
@@ -62,6 +74,9 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
         await signOut({ redirect: false })
         await logout() // This redirects to login
     }
+
+    // Determine Display Title
+    const displayTitle = user?.config?.fantasyName || user?.config?.businessName || 'Panel de Control'
 
     return (
         <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -88,8 +103,9 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                                                     <Link
                                                         key={sub.href}
                                                         href={sub.href}
-                                                        className="rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                                                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                                                     >
+                                                        {sub.icon && <sub.icon className="h-3 w-3" />}
                                                         {sub.label}
                                                     </Link>
                                                 ))}
@@ -154,8 +170,9 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                                                     <Link
                                                         key={sub.href}
                                                         href={sub.href}
-                                                        className="text-muted-foreground hover:text-foreground"
+                                                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
                                                     >
+                                                        {sub.icon && <sub.icon className="h-4 w-4" />}
                                                         {sub.label}
                                                     </Link>
                                                 ))}
@@ -176,7 +193,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                         </SheetContent>
                     </Sheet>
                     <div className="w-full flex-1">
-                        <h1 className="text-lg font-semibold md:text-xl">Panel de Control</h1>
+                        <h1 className="text-lg font-semibold md:text-xl">{displayTitle}</h1>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-medium hidden md:block">
@@ -191,3 +208,4 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
         </div>
     )
 }
+

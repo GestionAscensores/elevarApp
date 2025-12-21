@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { verifySession } from '@/lib/session'
 import { EditClientForm } from '@/components/clients/edit-client-form'
 import { ClientInvoiceList } from '@/components/clients/client-invoice-list'
+import { EquipmentList } from '@/components/maintenance/equipment-list'
 import { notFound, redirect } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
@@ -39,6 +40,12 @@ export default async function ClientValidPage({ params }: { params: Promise<{ id
         }))
     }
 
+    // Fetch Equipment
+    const equipment = await db.equipment.findMany({
+        where: { clientId: id },
+        orderBy: { createdAt: 'desc' }
+    })
+
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold tracking-tight">Ficha del Cliente</h1>
@@ -47,13 +54,16 @@ export default async function ClientValidPage({ params }: { params: Promise<{ id
                 <TabsList>
                     <TabsTrigger value="data">Datos</TabsTrigger>
                     <TabsTrigger value="history">Historial de Facturas</TabsTrigger>
-                    {/* Future: <TabsTrigger value="receipts">Recibos</TabsTrigger> */}
+                    <TabsTrigger value="equipment">Equipos (Bitácora)</TabsTrigger>
                 </TabsList>
                 <TabsContent value="data" className="space-y-4">
                     <EditClientForm client={serializedClient} />
                 </TabsContent>
                 <TabsContent value="history">
                     <ClientInvoiceList invoices={serializedClient.invoices} />
+                </TabsContent>
+                <TabsContent value="equipment">
+                    <EquipmentList clientId={id} equipment={equipment} />
                 </TabsContent>
             </Tabs>
         </div>

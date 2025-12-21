@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
 import { toast } from 'sonner'
-import { logout } from '@/actions/auth'
+import { logout, cancelVerification } from '@/actions/auth'
 
 export function VerificationForm() {
     const [code, setCode] = useState('')
@@ -71,10 +71,10 @@ export function VerificationForm() {
             <div className="text-center mt-4">
                 <button
                     type="button"
-                    onClick={() => logout()}
+                    onClick={() => cancelVerification()}
                     className="text-sm text-muted-foreground hover:underline"
                 >
-                    Cerrar Sesión / Cancelar
+                    Cancelar / Volver a Empezar
                 </button>
             </div>
         </form>

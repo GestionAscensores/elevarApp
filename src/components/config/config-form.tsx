@@ -84,6 +84,42 @@ export function ConfigForm({ initialConfig }: { initialConfig: any }) {
             </CardHeader>
             <CardContent>
                 <form action={action} className="space-y-6">
+                    {/* ENVIRONMENT SELECTOR */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+                        <Label className="text-base font-semibold">Entorno de Facturación</Label>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id="env-test"
+                                    name="afipEnvironment"
+                                    value="TEST"
+                                    defaultChecked={!initialConfig?.afipEnvironment || initialConfig.afipEnvironment === 'TEST'}
+                                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                />
+                                <Label htmlFor="env-test" className="font-normal cursor-pointer">
+                                    Modo Pruebas (Homologación)
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id="env-prod"
+                                    name="afipEnvironment"
+                                    value="PRODUCTION"
+                                    defaultChecked={initialConfig?.afipEnvironment === 'PRODUCTION'}
+                                    className="h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500"
+                                />
+                                <Label htmlFor="env-prod" className="font-normal cursor-pointer text-red-700 font-bold">
+                                    Modo Producción (Real)
+                                </Label>
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                            ⚠️ <strong>Importante:</strong> Si cambia de entorno, debe volver a cargar el Certificado (.crt) y Clave (.key) generados para el entorno seleccionado. Los certificados de prueba no funcionan en producción y viceversa.
+                        </p>
+                    </div>
+
                     <div className="space-y-4">
                         <div className="grid w-full max-w-sm items-center gap-1.5 border-b border-t py-4 my-2 border-dashed bg-blue-50 dark:bg-blue-950/10 px-4 rounded-lg">
                             <Label htmlFor="cuit" className="font-semibold text-blue-700">CUIT del Emisor</Label>

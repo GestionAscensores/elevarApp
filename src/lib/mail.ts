@@ -85,3 +85,56 @@ export async function sendVerificationEmail(to: string, code: string, name?: str
         html
     })
 }
+
+/**
+ * Envía email para resetear contraseña
+ */
+export async function sendPasswordResetEmail(to: string, token: string) {
+    const resetLink = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
+
+    const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .btn { 
+                    display: inline-block; 
+                    background-color: #007bff; 
+                    color: #ffffff !important; 
+                    padding: 12px 24px; 
+                    text-decoration: none; 
+                    border-radius: 4px; 
+                    font-weight: bold; 
+                    margin: 20px 0;
+                }
+                .footer { font-size: 12px; color: #666; margin-top: 30px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>Recuperar Contraseña</h2>
+                <p>Recibimos una solicitud para restablecer tu contraseña en Elevar App.</p>
+                <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
+                <center>
+                    <a href="${resetLink}" class="btn">Restablecer Contraseña</a>
+                </center>
+                <p>O copia y pega este enlace en tu navegador:</p>
+                <p style="word-break: break-all; font-size: 12px; color: #666;">${resetLink}</p>
+                <p>Este enlace expira en <strong>1 hora</strong>.</p>
+                <p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
+                <div class="footer">
+                    <p>--<br>Equipo Elevar App</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `
+
+    return sendMail({
+        to,
+        subject: 'Restablecer contraseña - Elevar App',
+        html
+    })
+}

@@ -146,7 +146,7 @@ export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
                                             </Link>
                                         </Button>
                                         <InvoiceDownloadButton invoice={inv} />
-                                        <EmailButton invoiceId={inv.id} hasEmail={!!inv.client?.email} />
+                                        <EmailButton invoiceId={inv.id} hasEmail={!!inv.client?.email} sentCount={inv.sentCount} />
                                         <CreateCreditNoteButton invoiceId={inv.id} />
                                     </div>
                                 </TableCell>

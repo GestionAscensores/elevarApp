@@ -188,7 +188,7 @@ export const authConfig: NextAuthConfig = {
                     if (existingUser && !existingUser.trialEndsAt && existingUser.subscriptionStatus === 'trial') {
                         console.log("🛠️ Fixing missing trial date for user:", user.email)
                         const trialEndsAt = new Date()
-                        trialEndsAt.setDate(trialEndsAt.getDate() + 30) // 30 days trial
+                        trialEndsAt.setDate(trialEndsAt.getDate() + 15) // 15 days trial
 
                         await db.user.update({
                             where: { id: existingUser.id },
@@ -207,7 +207,7 @@ export const authConfig: NextAuthConfig = {
             console.log("🆕 User created, setting trial period for:", user.email)
             if (user.id) {
                 const trialEndsAt = new Date()
-                trialEndsAt.setDate(trialEndsAt.getDate() + 30) // 30 days trial
+                trialEndsAt.setDate(trialEndsAt.getDate() + 15) // 15 days trial
 
                 try {
                     await db.user.update({

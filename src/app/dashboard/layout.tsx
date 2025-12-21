@@ -23,7 +23,13 @@ export default async function DashboardLayout({
             select: {
                 name: true,
                 email: true,
-                role: true
+                role: true,
+                config: {
+                    select: {
+                        fantasyName: true,
+                        businessName: true
+                    }
+                }
             }
         })
     }

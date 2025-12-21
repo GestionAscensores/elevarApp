@@ -35,6 +35,7 @@ model User {
   receipts                 Receipt[]
   sessions                 Session[]
   config                   UserConfig?
+  maintenanceVisits        MaintenanceVisit[]
 }
 
 model UserConfig {
@@ -45,6 +46,7 @@ model UserConfig {
   afipToken         String?
   afipSign          String?
   afipExpiration    DateTime?
+  afipEnvironment   String    @default("TEST") // 'TEST' | 'PRODUCTION'
   salePoint         Int       @default(1)
   logoUrl           String?
   emailTemplate     String?
@@ -77,6 +79,7 @@ model Client {
   priceUpdateFrequency  String            @default("MONTHLY")
   user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   items                 ClientEquipment[]
+  equipment             Equipment[]
   invoices              Invoice[]
   priceHistory          PriceHistory[]
   receipts              Receipt[]
@@ -137,6 +140,8 @@ model Invoice {
   serviceFrom      DateTime?
   serviceTo        DateTime?
   draftNumber      Int?
+  sentCount        Int           @default(0)
+  lastSentAt       DateTime?
   client           Client        @relation(fields: [clientId], references: [id])
   relatedInvoice   Invoice?      @relation("CreditNoteRelation", fields: [relatedInvoiceId], references: [id])
   creditNotes      Invoice[]     @relation("CreditNoteRelation")
@@ -221,4 +226,41 @@ model PriceHistory {
 
   @@index([clientId])
   @@index([month])
+}
+
+model Equipment {
+  id           String             @id @default(cuid())
+  clientId     String
+  qrCode       String             @unique
+  name         String
+  type         String             @default("Ascensor") // Ascensor, Montacargas, Plataforma
+  description  String?
+  installDate  DateTime?
+  lastService  DateTime?
+  client       Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  visits       MaintenanceVisit[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([clientId])
+}
+
+model MaintenanceVisit {
+  id           String    @id @default(cuid())
+  equipmentId  String
+  technicianId String
+  date         DateTime  @default(now())
+  type         String    @default("Rutina") // Rutina, Guardia, Reparacion
+  status       String    @default("Completada")
+  observations String?   @db.Text
+  signatureUrl String?
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  equipment    Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  technician   User      @relation(fields: [technicianId], references: [id])
+
+  @@index([equipmentId])
+  @@index([technicianId])
 }

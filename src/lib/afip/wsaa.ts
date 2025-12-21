@@ -83,14 +83,9 @@ export async function getAfipToken(userId: string) {
         </soapenv:Body>
     </soapenv:Envelope>`
 
-    // Only testing environment for now as per prompt "generate valid invoices" but user might want production.
-    // Usually we infer from config or env. Let's assume TEST unless configured.
-    // But user might upload PROD certs.
-    // The safest is to try one.
-    // For this app, I'll default to HOMOLOGATION (Test) because I don't have real certs.
-    // The user prompt implies connection to real site, but without real certs I can't test.
-    // I will use TEST URL for safety in development.
-    const URL = process.env.AFIP_ENV === 'production' ? WSAA_URL_PROD : WSAA_URL_TEST
+    // URL based on User Config
+    const isProduction = userConfig.afipEnvironment === 'PRODUCTION'
+    const URL = isProduction ? WSAA_URL_PROD : WSAA_URL_TEST
 
     try {
         const { data } = await axios.post(URL, soapRequest, {

@@ -93,6 +93,15 @@ export async function sendInvoiceEmail(invoiceId: string) {
 
         if (!result.success) throw new Error(result.error)
 
+        // Update tracking stats
+        await db.invoice.update({
+            where: { id: invoiceId },
+            data: {
+                sentCount: { increment: 1 },
+                lastSentAt: new Date()
+            }
+        })
+
         return { success: true, message: `Email enviado a ${invoice.client.email}` }
 
     } catch (error: any) {

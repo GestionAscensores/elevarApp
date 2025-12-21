@@ -38,8 +38,10 @@ type InvoiceData = {
 
 export async function getLastVoucher(userId: string, ptoVta: number, cbteTipo: number) {
     const { token, sign } = await getAfipToken(userId)
-    const user = await db.user.findUnique({ where: { id: userId } })
-    const url = process.env.AFIP_ENV === 'production' ? WSFE_URL_PROD : WSFE_URL_TEST
+    const user = await db.user.findUnique({ where: { id: userId }, include: { config: true } })
+
+    const isProduction = user?.config?.afipEnvironment === 'PRODUCTION'
+    const url = isProduction ? WSFE_URL_PROD : WSFE_URL_TEST
 
     if (!user) throw new Error("Usuario no encontrado")
 
@@ -79,8 +81,10 @@ export async function getLastVoucher(userId: string, ptoVta: number, cbteTipo: n
 
 export async function authorizeInvoice(userId: string, invoice: InvoiceData) {
     const { token, sign } = await getAfipToken(userId)
-    const user = await db.user.findUnique({ where: { id: userId } })
-    const url = process.env.AFIP_ENV === 'production' ? WSFE_URL_PROD : WSFE_URL_TEST
+    const user = await db.user.findUnique({ where: { id: userId }, include: { config: true } })
+
+    const isProduction = user?.config?.afipEnvironment === 'PRODUCTION'
+    const url = isProduction ? WSFE_URL_PROD : WSFE_URL_TEST
 
     if (!user) throw new Error("Usuario no encontrado")
 
@@ -206,8 +210,10 @@ export async function authorizeInvoice(userId: string, invoice: InvoiceData) {
 
 export async function getInvoiceDetails(userId: string, ptoVta: number, cbteTipo: number, cbteNro: number) {
     const { token, sign } = await getAfipToken(userId)
-    const user = await db.user.findUnique({ where: { id: userId } })
-    const url = process.env.AFIP_ENV === 'production' ? WSFE_URL_PROD : WSFE_URL_TEST
+    const user = await db.user.findUnique({ where: { id: userId }, include: { config: true } })
+
+    const isProduction = user?.config?.afipEnvironment === 'PRODUCTION'
+    const url = isProduction ? WSFE_URL_PROD : WSFE_URL_TEST
 
     if (!user) throw new Error("Usuario no encontrado")
 

@@ -31,6 +31,7 @@ export async function updateConfig(prevState: any, formData: FormData) {
     const cert = formData.get('cert') as string
     const key = formData.get('key') as string
     const salePoint = formData.get('salePoint')
+    const afipEnvironment = formData.get('afipEnvironment') as string
     const ivaCondition = formData.get('ivaCondition') as string
     const emailSubject = formData.get('emailSubject') as string
     const emailBody = formData.get('emailBody') as string
@@ -43,6 +44,11 @@ export async function updateConfig(prevState: any, formData: FormData) {
 
     // We only update provided fields
     const updateData: any = {}
+
+    // Always update these
+    if (afipEnvironment === 'PRODUCTION' || afipEnvironment === 'TEST') {
+        updateData.afipEnvironment = afipEnvironment
+    }
 
     // Only update if not null/undefined to avoid overwriting with empty
     // But empty strings might be intentional clearing? Let's allow strings.

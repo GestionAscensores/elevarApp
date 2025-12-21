@@ -49,7 +49,6 @@ export default function LoginPage() {
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Contraseña</Label>
                             <Input
                                 id="password"
                                 name="password"
@@ -59,6 +58,11 @@ export default function LoginPage() {
                             {state?.errors?.password && (
                                 <p className="text-sm text-red-500">{state.errors.password[0]}</p>
                             )}
+                            <div className="flex justify-end">
+                                <a href="/forgot-password" className="text-xs text-blue-600 hover:underline">
+                                    ¿Olvidaste tu contraseña?
+                                </a>
+                            </div>
                         </div>
                         {state?.message && (
                             <p className="text-sm text-red-500 text-center">{state.message}</p>
