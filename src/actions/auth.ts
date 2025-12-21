@@ -170,7 +170,7 @@ export async function register(prevState: any, formData: FormData) {
             acceptedTermsAt: new Date(),
             isEmailVerified: false, // Not verified yet
             subscriptionStatus: 'trial',
-            trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial
+            trialEndsAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days trial
             config: {
                 create: {} // Empty config
             }

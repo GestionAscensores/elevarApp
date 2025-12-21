@@ -80,10 +80,10 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
 
     return (
         <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-            <div className="hidden border-r border-zinc-800 bg-black text-white md:block">
+            <div className="hidden border-r border-white/10 bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))] md:block transition-colors duration-300">
                 <div className="flex h-full max-h-screen flex-col gap-2">
-                    <div className="flex h-14 items-center border-b border-zinc-800 px-4 lg:h-[60px] lg:px-6">
-                        <Link href="/" className="flex items-center gap-2 font-semibold text-white">
+                    <div className="flex h-14 items-center border-b border-white/10 px-4 lg:h-[60px] lg:px-6">
+                        <Link href="/" className="flex items-center gap-2 font-semibold text-[hsl(var(--sidebar-foreground))]">
                             <span className="">Elevar App</span>
                         </Link>
                     </div>
@@ -92,18 +92,18 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                             {navItems.map((item: any, index) => (
                                 item.children ? (
                                     <Collapsible key={index} defaultOpen className="group/collapsible">
-                                        <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-zinc-400 transition-all hover:text-white hover:bg-zinc-900">
+                                        <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[hsl(var(--sidebar-foreground))]/70 transition-all hover:text-[hsl(var(--sidebar-foreground))] hover:bg-white/10">
                                             <item.icon className="h-4 w-4" />
                                             {item.label}
                                             <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                                         </CollapsibleTrigger>
                                         <CollapsibleContent>
-                                            <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-zinc-800 pl-3">
+                                            <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-white/10 pl-3">
                                                 {item.children.map((sub: any) => (
                                                     <Link
                                                         key={sub.href}
                                                         href={sub.href}
-                                                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-zinc-400 transition-all hover:text-white hover:bg-zinc-900"
+                                                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-[hsl(var(--sidebar-foreground))]/70 transition-all hover:text-[hsl(var(--sidebar-foreground))] hover:bg-white/10"
                                                     >
                                                         {sub.icon && <sub.icon className="h-3 w-3" />}
                                                         {sub.label}
@@ -116,7 +116,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-zinc-400 transition-all hover:text-white hover:bg-zinc-900"
+                                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-[hsl(var(--sidebar-foreground))]/70 transition-all hover:text-[hsl(var(--sidebar-foreground))] hover:bg-white/10"
                                     >
                                         <item.icon className="h-4 w-4" />
                                         {item.label}
@@ -128,7 +128,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                     <div className="mt-auto p-4">
                         <Button
                             variant="ghost"
-                            className="w-full justify-start gap-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                            className="w-full justify-start gap-2 text-red-300 hover:text-red-100 hover:bg-red-900/20"
                             onClick={handleSignOut}
                         >
                             <LogOut className="h-4 w-4" />

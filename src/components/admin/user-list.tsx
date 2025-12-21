@@ -42,7 +42,7 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
     const [dialogOpen, setDialogOpen] = useState(false)
     const [dialogType, setDialogType] = useState<DialogType>(null)
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
-    const [trialDays, setTrialDays] = useState('30')
+    const [trialDays, setTrialDays] = useState('15')
     const [subscriptionMonths, setSubscriptionMonths] = useState('1')
 
     // Edit state
@@ -113,7 +113,7 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
         setDialogOpen(false)
         setSelectedUser(null)
         setDialogType(null)
-        setTrialDays('30')
+        setTrialDays('15')
         setSubscriptionMonths('1')
     }
 

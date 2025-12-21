@@ -9,6 +9,8 @@ const inter = Inter({
 
 import { Toaster } from "@/components/ui/sonner"
 import SessionProvider from "@/components/providers/session-provider"
+import { ThemeProvider } from "@/components/providers/theme-provider"
+import { PaletteProvider } from "@/components/providers/palette-provider"
 
 export const metadata: Metadata = {
   title: "Elevar App",
@@ -25,10 +27,19 @@ export default function RootLayout({
       <body
         className={`${inter.className} ${inter.variable} antialiased`}
       >
-        <SessionProvider>
-          {children}
-          <Toaster />
-        </SessionProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <PaletteProvider>
+            <SessionProvider>
+              {children}
+              <Toaster />
+            </SessionProvider>
+          </PaletteProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { Textarea } from '@/components/ui/textarea'
 import { AfipInstructions } from '@/components/config/afip-instructions'
 import { CsrGenerator } from '@/components/config/csr-generator'
+import { ThemeSelector } from '@/components/config/theme-selector'
 
 function SubmitButton() {
     const { pending } = useFormStatus()
@@ -84,6 +85,13 @@ export function ConfigForm({ initialConfig }: { initialConfig: any }) {
             </CardHeader>
             <CardContent>
                 <form action={action} className="space-y-6">
+                    {/* APPEARANCE SELECTOR */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+                        <Label className="text-base font-semibold">Apariencia</Label>
+                        <p className="text-xs text-muted-foreground mb-2">Selecciona el tema visual de la aplicación.</p>
+                        <ThemeSelector />
+                    </div>
+
                     {/* ENVIRONMENT SELECTOR */}
                     <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
                         <Label className="text-base font-semibold">Entorno de Facturación</Label>

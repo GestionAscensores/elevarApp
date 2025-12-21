@@ -18,7 +18,7 @@ export function TrialBanner({ trialEndsAt, status }: TrialBannerProps) {
 
     const today = new Date()
     const endDate = new Date(trialEndsAt)
-    const totalDays = 30 // Assuming standard 30 day trial
+    const totalDays = 15 // Standard 15 day trial
 
     // Calculate days remaining
     const diffTime = endDate.getTime() - today.getTime()
