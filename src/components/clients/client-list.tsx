@@ -12,6 +12,7 @@ import { Trash2 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ClientSearch } from '@/components/clients/client-search'
 import { ClientActions } from '@/components/clients/client-actions'
+import { ClientPriceCell } from '@/components/clients/client-price-cell'
 import { toast } from 'sonner'
 
 interface ClientListProps {
@@ -137,8 +138,8 @@ export function ClientList({ initialClients }: ClientListProps) {
                                         </TableCell>
                                         <TableCell>{client.cuit}</TableCell>
                                         <TableCell>{client.address}</TableCell>
-                                        <TableCell className="font-bold">
-                                            {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(totalAbono)}
+                                        <TableCell>
+                                            <ClientPriceCell clientId={client.id} initialPrice={totalAbono} />
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <ClientActions id={client.id} />

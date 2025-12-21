@@ -260,32 +260,86 @@ export async function getInvoiceDetails(userId: string, ptoVta: number, cbteTipo
             httpsAgent: agent
         })
         const result = await parseStringPromise(data)
-        const response = result['soap:Envelope']['soap:Body'][0]['FECompConsultarResponse'][0]['FECompConsultarResult'][0]
+        const envelope = result['soap:Envelope'] || result['soapenv:Envelope']
+        if (!envelope) {
+            console.error('AFIP Response Structure (No Envelope):', JSON.stringify(result))
+            throw new Error('Respuesta de AFIP invalida (Sin Envelope)')
+        }
+
+        const bodyArray = envelope['soap:Body'] || envelope['soapenv:Body']
+        if (!bodyArray || bodyArray.length === 0) {
+            console.error('AFIP Response Structure (No Body):', JSON.stringify(result))
+            throw new Error('Respuesta de AFIP invalida (Sin Body)')
+        }
+        const body = bodyArray[0]
+
+        // Find key ending with FECompConsultarResponse (ignoring namespace prefix)
+        const consultResponseKey = Object.keys(body).find(k => k.endsWith('FECompConsultarResponse'))
+        const consultResponse = consultResponseKey ? body[consultResponseKey][0] : null
+
+        if (!consultResponse) {
+            // Check for Fault
+            const faultKey = Object.keys(body).find(k => k.endsWith('Fault'))
+            if (faultKey) {
+                const fault = body[faultKey][0]
+                const faultString = fault.faultstring ? fault.faultstring[0] : JSON.stringify(fault)
+                throw new Error(`AFIP SOAP Fault: ${faultString}`)
+            }
+
+            console.error('AFIP Response Structure (No FECompConsultarResponse):', JSON.stringify(body))
+            throw new Error(`Respuesta de AFIP invalida. Keys en Body: ${Object.keys(body).join(', ')}`)
+        }
+
+        const consultResultKey = Object.keys(consultResponse).find(k => k.endsWith('FECompConsultarResult'))
+        const response = consultResultKey ? consultResponse[consultResultKey][0] : null
+
+        if (!response) {
+            throw new Error('Respuesta de AFIP invalida (Sin FECompConsultarResult)')
+        }
 
         if (response.Errors) {
             throw new Error(response.Errors[0].Err[0].Msg[0])
         }
 
+        if (!response.ResultGet) {
+            console.error('[AFIP DEBUG] Missing ResultGet:', JSON.stringify(response))
+            throw new Error('AFIP no devolvió detalles del comprobante (ResultGet vacío)')
+        }
+
         const comp = response.ResultGet[0]
 
+        // Debug Log
+        // console.log('[AFIP DEBUG] Comp Structure:', JSON.stringify(comp))
+
+        const val = (prop: any) => (prop && prop.length > 0) ? prop[0] : null
+        const num = (prop: any) => (prop && prop.length > 0) ? Number(prop[0]) : 0
+
+        // Check: CbteDesde must exist (FECompConsultar returns CbteDesde/Hasta, not CbteNro)
+        if (!val(comp.CbteDesde)) {
+            const keys = Object.keys(comp).join(', ')
+            console.error('[AFIP CRITICAL] Invalid Comp Structure:', JSON.stringify(comp))
+            throw new Error(`Estructura de comprobante inválida (Falta CbteDesde). Keys: ${keys}`)
+        }
+
         return {
-            cbteTipo: Number(comp.CbteTipo[0]),
-            cbteNro: Number(comp.CbteNro[0]),
-            ptoVta: Number(comp.PtoVta[0]),
-            cbteFch: comp.CbteFch[0],
-            impTotal: Number(comp.ImpTotal[0]),
-            impNeto: Number(comp.ImpNeto[0]),
-            impIVA: Number(comp.ImpIVA[0]),
-            docTipo: Number(comp.DocTipo[0]),
-            docNro: comp.DocNro[0],
-            cae: comp.CodAutorizacion[0],
-            caeFchVto: comp.FchVto[0],
-            concepto: Number(comp.Concepto[0]),
-            fchServDesde: comp.FchServDesde ? comp.FchServDesde[0] : null,
-            fchServHasta: comp.FchServHasta ? comp.FchServHasta[0] : null
+            cbteTipo: num(comp.CbteTipo),
+            cbteNro: num(comp.CbteDesde), // Use CbteDesde as the number
+            ptoVta: num(comp.PtoVta),
+            cbteFch: val(comp.CbteFch) || '',
+            impTotal: num(comp.ImpTotal),
+            impNeto: num(comp.ImpNeto),
+            impIVA: num(comp.ImpIVA),
+            docTipo: num(comp.DocTipo),
+            docNro: val(comp.DocNro) || '0',
+            cae: val(comp.CodAutorizacion) || '',
+            caeFchVto: val(comp.FchVto) || '',
+            concepto: num(comp.Concepto),
+            fchServDesde: val(comp.FchServDesde),
+            fchServHasta: val(comp.FchServHasta)
         }
     } catch (error: any) {
-        console.error('ARCA WSFE Error (FECompConsultar):', error.message)
-        throw new Error('Error al consultar comprobante')
+        const msg = error.response?.data ? JSON.stringify(error.response.data) : (error.message || '')
+        console.error('ARCA WSFE Error (FECompConsultar):', msg)
+        throw new Error(`Error al consultar comprobante: ${msg.slice(0, 100)}`)
     }
 }

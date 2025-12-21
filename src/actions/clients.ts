@@ -193,3 +193,39 @@ export async function updateClient(prevState: any, formData: FormData) {
         return { message: 'Error al actualizar cliente' }
     }
 }
+
+export async function updateClientPrice(clientId: string, newPrice: number) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    try {
+        const items = await db.clientEquipment.findMany({
+            where: { clientId }
+        })
+
+        if (items.length === 0) {
+            // Create default item if none exists
+            await db.clientEquipment.create({
+                data: {
+                    clientId,
+                    type: 'Abono de Servicio',
+                    quantity: 1,
+                    price: newPrice
+                }
+            })
+        } else {
+            // Update the first item (Primary subscription)
+            // If there are multiple, we update the first one as it's the most logical place for the "Base" price.
+            await db.clientEquipment.update({
+                where: { id: items[0].id },
+                data: { price: newPrice }
+            })
+        }
+
+        revalidatePath('/dashboard/clients')
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error updating price:", error)
+        return { success: false, message: error.message }
+    }
+}

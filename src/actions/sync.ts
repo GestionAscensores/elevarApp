@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { verifySession } from '@/lib/session'
 import { getLastVoucher, getInvoiceDetails } from '@/lib/afip/wsfe'
+import { revalidatePath } from 'next/cache'
 
 const INVOICE_TYPES_MAP: Record<number, string> = {
     1: 'A',
@@ -33,36 +34,48 @@ export async function syncHistoricalData(invoiceType: number = 11) {
             return { success: true, count: 0, message: 'No hay comprobantes en ARCA para sincronizar' }
         }
 
-        // Get the highest local voucher number to avoid duplicates
-        const lastLocal = await db.invoice.findFirst({
+        // Optimización: Estrategia "Hacia Atrás" (Backwards)
+        // en lugar de buscar el ultimo local + 1, buscamos huecos desde el final hacia el principio.
+        // Esto prioriza los últimos meses para el cálculo de Monotributo.
+
+        // 1. Get all local invoice numbers for this POS and Type to find gaps
+        const localInvoices = await db.invoice.findMany({
             where: {
                 userId: session.userId,
                 pointOfSale: ptoVta,
                 type: INVOICE_TYPES_MAP[invoiceType],
-                status: 'APPROVED'
             },
-            orderBy: { number: 'desc' }
+            select: { number: true }
         })
 
-        const startFrom = lastLocal ? lastLocal.number + 1 : 1
-        const limit = Math.min(lastVoucherNumber, startFrom + 99) // Import up to 100 invoices
+        const existingSet = new Set(localInvoices.map(inv => inv.number))
+        const missingNumbers: number[] = []
+        const BATCH_SIZE = 50 // Reduce risk of timeout
 
-        console.log('[SYNC] Range:', { startFrom, limit, lastLocal: lastLocal?.number })
+        // 2. Identify missing numbers from LastVoucher down to 1
+        for (let i = lastVoucherNumber; i >= 1; i--) {
+            if (!existingSet.has(i)) {
+                missingNumbers.push(i)
+            }
+            if (missingNumbers.length >= BATCH_SIZE) break
+        }
 
-        if (startFrom > lastVoucherNumber) {
+        if (missingNumbers.length === 0) {
             return {
                 success: true,
                 count: 0,
-                message: `Todos los comprobantes ya están sincronizados (último: ${lastVoucherNumber})`
+                message: `Todos los comprobantes están sincronizados (Total: ${lastVoucherNumber})`
             }
         }
 
-        let imported = 0
-        let skipped = 0
-        let errors = 0
+        console.log(`[SYNC] Found ${missingNumbers.length} missing invoices. Fetching...`, missingNumbers)
 
-        // Iterate and fetch each invoice
-        for (let cbteNro = startFrom; cbteNro <= limit; cbteNro++) {
+        let imported = 0
+        let errors = 0
+        let lastError = ''
+
+        // 3. Iterate missing numbers
+        for (const cbteNro of missingNumbers) {
             try {
                 console.log(`[SYNC] Fetching invoice ${cbteNro}...`)
                 const invoiceData = await getInvoiceDetails(session.userId, ptoVta, invoiceType, cbteNro)
@@ -87,7 +100,6 @@ export async function syncHistoricalData(invoiceType: number = 11) {
                             address: ''
                         }
                     })
-                    console.log(`[SYNC] Created client for CUIT ${invoiceData.docNro}`)
                 }
 
                 // Parse date from YYYYMMDD
@@ -101,22 +113,6 @@ export async function syncHistoricalData(invoiceType: number = 11) {
                 const caeMonth = invoiceData.caeFchVto.substring(4, 6)
                 const caeDay = invoiceData.caeFchVto.substring(6, 8)
                 const caeExpiry = new Date(`${caeYear}-${caeMonth}-${caeDay}`)
-
-                // Check if invoice already exists
-                const existing = await db.invoice.findFirst({
-                    where: {
-                        userId: session.userId,
-                        pointOfSale: ptoVta,
-                        type: INVOICE_TYPES_MAP[invoiceType],
-                        number: cbteNro
-                    }
-                })
-
-                if (existing) {
-                    skipped++
-                    console.log(`[SYNC] Invoice ${cbteNro} already exists, skipping`)
-                    continue
-                }
 
                 // Parse service dates if available
                 let serviceFrom = null
@@ -165,22 +161,27 @@ export async function syncHistoricalData(invoiceType: number = 11) {
                 })
 
                 imported++
-                console.log(`[SYNC] Successfully imported invoice ${cbteNro}`)
+                await new Promise(resolve => setTimeout(resolve, 100)) // Slight delay
 
-                // Small delay to avoid overwhelming the API
-                await new Promise(resolve => setTimeout(resolve, 200))
             } catch (err: any) {
                 console.error(`[SYNC] Error syncing invoice ${cbteNro}:`, err.message)
                 errors++
-                // Continue with next invoice
+                lastError = err.message
             }
+        }
+
+        let resultMsg = `Se importaron ${imported} comprobantes recientes.`
+        if (errors > 0) resultMsg += ` ${errors} fallaron. (Ultimo error: ${lastError})`
+
+        if (imported > 0) {
+            revalidatePath('/dashboard')
+            revalidatePath('/dashboard/billing/credit-notes')
         }
 
         return {
             success: true,
             count: imported,
-            skipped,
-            message: `Se importaron ${imported} comprobantes exitosamente. ${skipped > 0 ? `${skipped} ya existían. ` : ''}${errors > 0 ? `${errors} con errores.` : ''}`
+            message: resultMsg
         }
 
     } catch (error: any) {

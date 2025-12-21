@@ -8,40 +8,55 @@ export async function getMonotributoStatus() {
     const session = await verifySession()
     if (!session) return null
 
-    // 1. Calculate TTM (Trailing 12 Months) Revenue
+    // 1. Calculate TTM (Trailing 12 Months) Revenue using Accrual Basis (Devengado)
     const today = new Date()
     const lastYear = new Date(today)
     lastYear.setFullYear(today.getFullYear() - 1)
 
-    // Sum Approved Invoices (A, B, C...)
-    const invoices = await db.invoice.aggregate({
-        _sum: { totalAmount: true },
+    // We need to fetch all potentially relevant invoices.
+    // Since an invoice from 2 years ago could technically refer to a service today (unlikely but possible),
+    // or an invoice today refers to a service 2 years ago (also unlikely).
+    // To be safe and efficient, let's fetch invoices from the LAST 18 MONTHS based on emission date,
+    // which should cover 99.9% of "delayed billing" cases for the TTM period.
+    const searchStart = new Date(lastYear)
+    searchStart.setMonth(searchStart.getMonth() - 6) // Buffer of 6 months
+
+    const allInvoices = await db.invoice.findMany({
         where: {
             userId: session.userId,
             status: 'APPROVED',
-            date: {
-                gte: lastYear,
-                lte: today
-            },
-            type: { notIn: ['NCA', 'NCB', 'NCC', 'QUOTE', 'DRAFT'] } // Exclude NCs and drafts
+            date: { gte: searchStart }
+        },
+        select: {
+            totalAmount: true,
+            type: true,
+            date: true,
+            serviceTo: true,
+            serviceFrom: true
         }
     })
 
-    // Sum Credit Notes (to subtract)
-    const creditNotes = await db.invoice.aggregate({
-        _sum: { totalAmount: true },
-        where: {
-            userId: session.userId,
-            status: 'APPROVED',
-            date: {
-                gte: lastYear,
-                lte: today
-            },
-            type: { in: ['NCA', 'NCB', 'NCC'] }
-        }
-    })
+    let grossRevenue = 0
 
-    const grossRevenue = (Number(invoices._sum.totalAmount) || 0) - (Number(creditNotes._sum.totalAmount) || 0)
+    for (const inv of allInvoices) {
+        // Determine the "Effective Date" for Monotributo calculation
+        // Priority: ServiceTo > ServiceFrom > InvoiceDate
+        let effectiveDate = inv.date
+        if (inv.serviceTo) effectiveDate = inv.serviceTo
+        else if (inv.serviceFrom) effectiveDate = inv.serviceFrom
+
+        // Check if this effective date falls within the TTM window [lastYear, today]
+        if (effectiveDate >= lastYear && effectiveDate <= today) {
+            const amount = Number(inv.totalAmount)
+
+            // Add or Subtract based on type
+            if (['NCA', 'NCB', 'NCC'].includes(inv.type)) {
+                grossRevenue -= amount
+            } else if (!['QUOTE', 'DRAFT'].includes(inv.type)) {
+                grossRevenue += amount
+            }
+        }
+    }
 
     // 2. Determine Category
     // Assume Service Provider (Limit H) unless specified otherwise? 
@@ -81,6 +96,7 @@ export async function getMonotributoStatus() {
         nextCategoryCode: nextCategory ? nextCategory.code : null,
         nextCategoryLimit: nextCategory ? nextCategory.limit : null,
         serviceLimit: serviceLimit,
-        isExcluded: currentCategory.code === 'EXCLUIDO' || (isService && grossRevenue > serviceLimit)
+        isExcluded: currentCategory.code === 'EXCLUIDO' || (isService && grossRevenue > serviceLimit),
+        hasInvoices: allInvoices.length > 0
     }
 }

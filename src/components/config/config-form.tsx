@@ -142,6 +142,9 @@ export function ConfigForm({ initialConfig }: { initialConfig: any }) {
                             <Label htmlFor="salePoint">Punto de Venta (ARCA)</Label>
                             <Input type="number" id="salePoint" name="salePoint" defaultValue={initialConfig?.salePoint || 1} min="1" />
                             <p className="text-xs text-muted-foreground">Número de punto de venta registrado en ARCA para Factura Electrónica.</p>
+                            <p className="text-[10px] text-blue-600 bg-blue-50 border border-blue-100 p-2 rounded mt-1">
+                                💡 <strong>Importante:</strong> Si migras de otro sistema, usa el <strong>mismo Punto de Venta</strong> para mantener la continuidad de tus estadísticas y numeración.
+                            </p>
                         </div>
 
                         <div className="grid w-full max-w-sm items-center gap-1.5">

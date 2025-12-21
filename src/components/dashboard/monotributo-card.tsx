@@ -16,27 +16,37 @@ export function MonotributoCard() {
     const [syncing, setSyncing] = useState(false)
 
     useEffect(() => {
+        // Load initial data
         getMonotributoStatus().then((result) => {
             setData(result)
             setLoading(false)
+            // Auto-sync after loading view (non-blocking)
+            handleSync(true)
         })
     }, [])
 
-    const handleSync = async () => {
+    const handleSync = async (silent = false) => {
         setSyncing(true)
         try {
-            // Sync Factura C (Type 11) - most common for elevator services
-            const result = await syncHistoricalData(11)
-            if (result.success) {
-                toast.success(result.message || 'Sincronización completada')
+            // Sync Factura C (Type 11)
+            const resultC = await syncHistoricalData(11)
+
+            // Sync Nota de Crédito C (Type 13)
+            const resultNC = await syncHistoricalData(13)
+
+            if (resultC.success && resultNC.success) {
+                const msg = `Sync: ${resultC.count} FC, ${resultNC.count} NC`
+                if (!silent) toast.success(msg)
+
                 // Refresh data
                 const newData = await getMonotributoStatus()
                 setData(newData)
             } else {
-                toast.error(result.message || 'Error al sincronizar')
+                const errorMsg = resultC.message || resultNC.message
+                if (!silent) toast.error(errorMsg || 'Error al sincronizar')
             }
         } catch (error: any) {
-            toast.error('Error: ' + error.message)
+            if (!silent) toast.error('Error: ' + error.message)
         } finally {
             setSyncing(false)
         }
@@ -100,7 +110,7 @@ export function MonotributoCard() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={handleSync}
+                        onClick={() => handleSync(false)}
                         disabled={syncing}
                         className="h-8 px-2"
                     >
@@ -120,7 +130,7 @@ export function MonotributoCard() {
 
                 <div className="mt-3">
                     <div className="flex justify-between text-xs mb-1">
-                        <span>Consumo de Categoría ({percentage.toFixed(1)}%)</span>
+                        <span>Consumo de Categoría ({formatMoney(grossRevenue)})</span>
                         <span className="text-muted-foreground">Límite: {formatMoney(targetLimit)}</span>
                     </div>
                     {/* Custom Progress Color trick if 'Progress' component doesn't support color prop easily without className overrides */}
@@ -141,6 +151,15 @@ export function MonotributoCard() {
                     <p className="text-xs text-muted-foreground mt-2">
                         Siguiente salto: <strong>Cat. {nextCategoryCode}</strong>
                     </p>
+                )}
+
+                {!data.hasInvoices && (
+                    <div className="mt-4 p-2 bg-blue-50/50 rounded border border-blue-100 text-[10px] text-blue-700 flex gap-2">
+                        <Info className="h-3 w-3 shrink-0 mt-0.5" />
+                        <p>
+                            Si vienes de otro sistema, asegúrate de configurar el <strong>mismo Punto de Venta</strong> que usabas antes. Esto permitirá que la sincronización recupere tu historial exacto para este cálculo.
+                        </p>
+                    </div>
                 )}
             </CardContent>
         </Card>
