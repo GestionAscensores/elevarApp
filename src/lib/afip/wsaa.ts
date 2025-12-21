@@ -1,5 +1,6 @@
 import forge from 'node-forge'
 import axios from 'axios'
+import https from 'https'
 import { parseStringPromise } from 'xml2js'
 import { decryptData } from '@/lib/encryption'
 import { db } from '@/lib/db'
@@ -88,11 +89,16 @@ export async function getAfipToken(userId: string) {
     const URL = isProduction ? WSAA_URL_PROD : WSAA_URL_TEST
 
     try {
+        const agent = new https.Agent({
+            ciphers: 'DEFAULT@SECLEVEL=1'
+        })
+
         const { data } = await axios.post(URL, soapRequest, {
             headers: {
                 'Content-Type': 'text/xml',
                 'SOAPAction': ''
-            }
+            },
+            httpsAgent: agent
         })
 
         const result = await parseStringPromise(data)
@@ -118,7 +124,15 @@ export async function getAfipToken(userId: string) {
         return { token, sign }
 
     } catch (error: any) {
-        console.error('AFIP WSAA Error:', error.response?.data || error.message)
-        throw new Error('Error al conectar con AFIP (Autenticación)')
+        const msg = error.response?.data ? JSON.stringify(error.response.data) : error.message
+        console.error('AFIP WSAA Error:', msg)
+        // Extract common AFIP errors for better UX
+        if (msg.includes('CMS') || msg.includes('signature')) {
+            throw new Error('Error de Certificado: La firma digital no coincide (Verifica que el .key y .crt sean del mismo par)')
+        }
+        if (msg.includes('Computador no autorizado')) {
+            throw new Error('Error de Permisos: El alias no está autorizado. Falta el paso de "Nueva Relación" en AFIP.')
+        }
+        throw new Error(`Error de Autenticación AFIP: ${msg.slice(0, 100)}...`)
     }
 }

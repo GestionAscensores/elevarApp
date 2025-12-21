@@ -1,4 +1,5 @@
 import axios from 'axios'
+import https from 'https'
 import { parseStringPromise } from 'xml2js'
 import { getAfipToken } from './wsaa'
 import { db } from '@/lib/db'
@@ -62,8 +63,12 @@ export async function getLastVoucher(userId: string, ptoVta: number, cbteTipo: n
     </soapenv:Envelope>`
 
     try {
+        const agent = new https.Agent({
+            ciphers: 'DEFAULT@SECLEVEL=1'
+        })
         const { data } = await axios.post(url, soapRequest, {
-            headers: { 'Content-Type': 'text/xml', 'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FECompUltimoAutorizado' }
+            headers: { 'Content-Type': 'text/xml', 'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FECompUltimoAutorizado' },
+            httpsAgent: agent
         })
         const result = await parseStringPromise(data)
         const response = result['soap:Envelope']['soap:Body'][0]['FECompUltimoAutorizadoResponse'][0]['FECompUltimoAutorizadoResult'][0]
@@ -74,8 +79,14 @@ export async function getLastVoucher(userId: string, ptoVta: number, cbteTipo: n
 
         return Number(response.CbteNro[0])
     } catch (error: any) {
-        console.error('AFIP WSFE Error (LastVoucher):', error.message)
-        throw new Error('Error al obtener último comprobante')
+        const msg = error.response?.data ? JSON.stringify(error.response.data) : (error.message || '')
+        console.error('AFIP WSFE Error (LastVoucher):', msg)
+
+        if (msg.includes('Punto de Venta')) {
+            throw new Error(`Error en Punto de Venta: ${msg}`)
+        }
+
+        throw new Error(`Error al obtener último comprobante: ${msg.slice(0, 100)}`)
     }
 }
 
@@ -163,8 +174,12 @@ export async function authorizeInvoice(userId: string, invoice: InvoiceData) {
     </soapenv:Envelope>`
 
     try {
+        const agent = new https.Agent({
+            ciphers: 'DEFAULT@SECLEVEL=1'
+        })
         const { data } = await axios.post(url, soapRequest, {
-            headers: { 'Content-Type': 'text/xml', 'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FECAESolicitar' }
+            headers: { 'Content-Type': 'text/xml', 'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FECAESolicitar' },
+            httpsAgent: agent
         })
         const result = await parseStringPromise(data)
         const response = result['soap:Envelope']['soap:Body'][0]['FECAESolicitarResponse'][0]['FECAESolicitarResult'][0]
@@ -237,8 +252,12 @@ export async function getInvoiceDetails(userId: string, ptoVta: number, cbteTipo
     </soapenv:Envelope>`
 
     try {
+        const agent = new https.Agent({
+            ciphers: 'DEFAULT@SECLEVEL=1'
+        })
         const { data } = await axios.post(url, soapRequest, {
-            headers: { 'Content-Type': 'text/xml', 'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FECompConsultar' }
+            headers: { 'Content-Type': 'text/xml', 'SOAPAction': 'http://ar.gov.afip.dif.FEV1/FECompConsultar' },
+            httpsAgent: agent
         })
         const result = await parseStringPromise(data)
         const response = result['soap:Envelope']['soap:Body'][0]['FECompConsultarResponse'][0]['FECompConsultarResult'][0]

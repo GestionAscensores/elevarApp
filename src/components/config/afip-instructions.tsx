@@ -50,6 +50,11 @@ export function AfipInstructions() {
                                     <li>Sube el archivo <code>pedido.csr</code> generado en el paso 1.</li>
                                     <li>Descarga el archivo <code>.crt</code> (Certificado) que te devuelve AFIP.</li>
                                 </ul>
+                                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                                    <strong>¿Error "La autorización ya existe"?</strong>
+                                    <br />
+                                    Significa que ya creaste este Alias antes. No intentes crear uno nuevo. Busca el alias existente (ej: "facturardor Elevar App") en la lista, haz clic en "Ver Detalles" (lupa) y sube el certificado ahí.
+                                </div>
                             </div>
 
                             <div className="relative border-l-2 border-blue-200 pl-4 py-1">
