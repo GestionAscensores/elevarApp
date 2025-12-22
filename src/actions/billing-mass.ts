@@ -59,8 +59,11 @@ async function createMassInvoicesAction(userId: string, clientIds: string[], use
             const serviceFrom = new Date(year, month - 1, 1);
             const serviceTo = new Date(year, month, 0); // Last day of month
 
-            // Payment Due: Last day of CURRENT month
-            const paymentDue = new Date(year, month, 0);
+            // Payment Due: Last day of CURRENT month (Emission Month)
+            // Fixes AFIP 10036: Payment Due cannot be before Invoice Date.
+            const now = new Date();
+            const invoiceDate = new Date(); // Today
+            const paymentDue = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
             // Month Name
             const monthName = serviceFrom.toLocaleString('es-AR', { month: 'long' });

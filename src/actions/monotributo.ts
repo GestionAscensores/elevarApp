@@ -4,10 +4,9 @@ import { db } from '@/lib/db'
 import { verifySession } from '@/lib/session'
 import { MONOTRIBUTO_SCALES } from '@/lib/monotributo'
 
-export async function getMonotributoStatus() {
-    const session = await verifySession()
-    if (!session) return null
+import { revalidateTag, unstable_cache } from 'next/cache'
 
+async function calculateMonotributoStatus(userId: string) {
     // 1. Calculate TTM (Trailing 12 Months) Revenue using Accrual Basis (Devengado)
     const today = new Date()
     const lastYear = new Date(today)
@@ -23,7 +22,7 @@ export async function getMonotributoStatus() {
 
     const allInvoices = await db.invoice.findMany({
         where: {
-            userId: session.userId,
+            userId: userId,
             status: 'APPROVED',
             date: { gte: searchStart }
         },
@@ -97,6 +96,38 @@ export async function getMonotributoStatus() {
         nextCategoryLimit: nextCategory ? nextCategory.limit : null,
         serviceLimit: serviceLimit,
         isExcluded: currentCategory.code === 'EXCLUIDO' || (isService && grossRevenue > serviceLimit),
-        hasInvoices: allInvoices.length > 0
+        hasInvoices: allInvoices.length > 0,
+        periodStart: lastYear.toISOString(),
+        periodEnd: today.toISOString()
+    }
+}
+
+export async function getMonotributoStatus() {
+    const session = await verifySession()
+    if (!session) return null
+
+    // Check configuration
+    const config = await db.userConfig.findUnique({ where: { userId: session.userId } })
+    if (!config || config.ivaCondition !== 'Monotributo') {
+        return { shouldHide: true }
+    }
+
+    // Cache for 1 hour
+    const getCached = unstable_cache(
+        async () => calculateMonotributoStatus(session.userId),
+        [`monotributo-status-${session.userId}`],
+        {
+            revalidate: 3600, // 1 hour
+            tags: [`monotributo-${session.userId}`]
+        }
+    )
+
+    return getCached()
+}
+
+export async function invalidateMonotributoCache() {
+    const session = await verifySession()
+    if (session) {
+        revalidateTag(`monotributo-${session.userId}`)
     }
 }

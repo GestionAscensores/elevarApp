@@ -33,6 +33,8 @@ export async function PriceAlertsWidget() {
     const dueClients = clients.filter(client => {
         // User requested to ignore MONTHLY updates in the widget
         if (client.priceUpdateFrequency === 'MONTHLY') return false
+        // Ignore clients with NO updates
+        if (client.priceUpdateFrequency === 'NO') return false
 
         if (!client.lastPriceUpdate) return true // Never updated? Maybe due if it's not new? Let's say yes or maybe handle separate logic.
         // Actually if lastPriceUpdate is null, we assume it needs initial setting or update?

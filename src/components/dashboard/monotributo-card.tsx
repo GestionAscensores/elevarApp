@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { getMonotributoStatus } from '@/actions/monotributo'
+import { getMonotributoStatus, invalidateMonotributoCache } from '@/actions/monotributo'
 import { syncHistoricalData } from '@/actions/sync'
-import { AlertCircle, TrendingUp, Info, Download } from 'lucide-react'
+import { AlertCircle, HeartPulse, Info, Download } from 'lucide-react'
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -39,6 +39,7 @@ export function MonotributoCard() {
                 if (!silent) toast.success(msg)
 
                 // Refresh data
+                await invalidateMonotributoCache()
                 const newData = await getMonotributoStatus()
                 setData(newData)
             } else {
@@ -56,7 +57,7 @@ export function MonotributoCard() {
         return (
             <Card>
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Estado Monotributo</CardTitle>
+                    <CardTitle className="text-sm font-medium">Salud de tu Monotributo</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Skeleton className="h-8 w-[100px] mb-2" />
@@ -66,7 +67,7 @@ export function MonotributoCard() {
         )
     }
 
-    if (!data) return null;
+    if (!data || data.shouldHide) return null;
 
     const { grossRevenue, currentCategoryCode, nextCategoryLimit, serviceLimit, isExcluded, nextCategoryCode } = data
 
@@ -105,26 +106,31 @@ export function MonotributoCard() {
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Estado Monotributo</CardTitle>
                 <div className="flex items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSync(false)}
-                        disabled={syncing}
-                        className="h-8 px-2"
-                    >
-                        <Download className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                        <span className="ml-1 text-xs">Sincronizar</span>
-                    </Button>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <HeartPulse className="h-5 w-5 text-red-500 fill-red-100" />
+                    <CardTitle className="text-sm font-medium">Salud de tu Monotributo</CardTitle>
                 </div>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSync(false)}
+                    disabled={syncing}
+                    className="h-8 px-2"
+                >
+                    <Download className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                    <span className="ml-1 text-xs">Sincronizar</span>
+                </Button>
             </CardHeader>
             <CardContent>
                 <div className="flex items-baseline justify-between mb-1">
                     <div className="text-2xl font-bold">Cat. {currentCategoryCode}</div>
                     <div className="text-sm text-muted-foreground text-right w-1/2">
-                        {formatMoney(grossRevenue)} / año
+                        <div className="font-medium text-foreground">{formatMoney(grossRevenue)} / año (12m)</div>
+                        {data.periodStart && (
+                            <div className="text-[10px] opacity-75 mt-0.5">
+                                {new Date(data.periodStart).toLocaleDateString()} - {new Date(data.periodEnd).toLocaleDateString()}
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -89,20 +89,21 @@ export function MassUpdatePrices() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="frequency">Aplicar a Clientes con Frecuencia</Label>
+                            <Label htmlFor="frequency">Filtros de Frecuencia</Label>
                             <Select value={frequency} onValueChange={setFrequency}>
                                 <SelectTrigger id="frequency">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="ALL">Todos (excepto bloqueados)</SelectItem>
+                                    <SelectItem value="ALL">Todos (excepto bloqueados/inactivos)</SelectItem>
                                     <SelectItem value="MONTHLY">Solo Mensuales</SelectItem>
                                     <SelectItem value="QUARTERLY">Solo Trimestrales</SelectItem>
+                                    <SelectItem value="SEMIANNUAL">Solo Semestrales</SelectItem>
                                     <SelectItem value="YEARLY">Solo Anuales</SelectItem>
                                 </SelectContent>
                             </Select>
                             <p className="text-xs text-muted-foreground">
-                                Clientes marcados como "excluir" no serán afectados
+                                Clientes marcados como "excluir" o "inactivos" no serán afectados
                             </p>
                         </div>
                     </div>
@@ -130,9 +131,10 @@ export function MassUpdatePrices() {
                                     <p>
                                         Solo los clientes marcados como <strong>
                                             {
-                                                frequency === 'ALL' ? 'Todos (excepto bloqueados)' :
+                                                frequency === 'ALL' ? 'Todos (activos)' :
                                                     frequency === 'MONTHLY' ? 'MENSUAL' :
-                                                        frequency === 'QUARTERLY' ? 'TRIMESTRAL' : 'ANUAL'
+                                                        frequency === 'QUARTERLY' ? 'TRIMESTRAL' :
+                                                            frequency === 'SEMIANNUAL' ? 'SEMESTRAL' : 'ANUAL'
                                             }
                                         </strong> serán afectados.
                                     </p>

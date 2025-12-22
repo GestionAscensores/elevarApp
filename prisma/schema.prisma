@@ -82,7 +82,8 @@ model Client {
   updatedAt             DateTime          @updatedAt
   docType               String            @default("80")
   excludeFromMassUpdate Boolean           @default(false)
-  priceUpdateFrequency  String            @default("MONTHLY") // Enum-like: MONTHLY, QUARTERLY, SEMIANNUAL, ANNUAL
+  isActive              Boolean           @default(true)
+  priceUpdateFrequency  String            @default("MONTHLY") // Enum-like: MONTHLY, QUARTERLY, SEMIANNUAL, ANNUAL, NO
   lastPriceUpdate       DateTime?         // Reference date for next update calculation
   user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   items                 ClientEquipment[]

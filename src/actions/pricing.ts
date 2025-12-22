@@ -24,11 +24,15 @@ export async function massUpdatePrices(prevState: any, formData: FormData) {
         // Build filter based on frequency
         const filter: any = {
             userId: session.userId,
+            isActive: true, // Don't update suspended clients
             excludeFromMassUpdate: false
         }
 
         if (frequency && frequency !== 'ALL') {
             filter.priceUpdateFrequency = frequency
+        } else {
+            // Apply to ALL, but exclude those set to 'NO' (Sin Actualización)
+            filter.priceUpdateFrequency = { not: 'NO' }
         }
 
         // Get clients to update

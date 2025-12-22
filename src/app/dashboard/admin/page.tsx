@@ -5,6 +5,7 @@ import { AdminStats } from '@/components/admin/admin-stats' // New Stats Compone
 import { verifySession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import { CleanupZone } from '@/components/admin/cleanup-zone'
+import { TestUserInfo } from '@/components/admin/test-user-info'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,11 @@ export default async function AdminDashboardPage() {
                 <h1 className="text-3xl font-bold tracking-tight mb-2">Administración</h1>
                 <p className="text-muted-foreground">Visión general del sistema y gestión de usuarios.</p>
             </div>
+
+            {/* Test User Info */}
+            <section>
+                <TestUserInfo />
+            </section>
 
             {/* Platform Stats (New Addition) */}
             <section>

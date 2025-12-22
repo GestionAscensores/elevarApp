@@ -9,14 +9,14 @@ import { revalidatePath } from 'next/cache'
 const ClientSchema = z.object({
     name: z.string().min(1, "El nombre del edificio es obligatorio"),
     docType: z.string().default('80'),
-    cuit: z.string().min(1, "El documento es obligatorio").regex(/^\d+$/, "Solo números"),
+    // Relaxed CUIT validation: Optional or empty allowed. If provided, must be numbers.
+    cuit: z.string().regex(/^\d*$/, "Solo números").optional().or(z.literal('')),
     address: z.string().optional(),
     ivaCondition: z.string().min(1, "Seleccione la condición frente al IVA"),
     email: z.string().email("Email inválido").optional().or(z.literal('')),
     phone: z.string().optional(),
-    priceUpdateFrequency: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY', 'SEMIANNUAL']).optional().default('MONTHLY'),
+    priceUpdateFrequency: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY', 'SEMIANNUAL', 'NO']).optional().default('MONTHLY'),
     lastPriceUpdate: z.string().optional(),
-    // items is a JSON string of array { type, quantity, price }
     items: z.string().optional(),
 })
 
@@ -56,13 +56,24 @@ export async function createClient(prevState: any, formData: FormData) {
     const items = result.data.items ? JSON.parse(result.data.items) : []
     const lastPriceUpdateDate = result.data.lastPriceUpdate ? new Date(result.data.lastPriceUpdate) : null
 
+    // Default CUIT to '0' if empty
+    const finalCuit = (!result.data.cuit || result.data.cuit.trim() === '') ? '0' : result.data.cuit
+
+    // Validation: Strict CUIT requirement for specific tax conditions
+    const needsCuit = ['Responsable Inscripto', 'Monotributo', 'Exento'].includes(result.data.ivaCondition)
+    if (needsCuit && (result.data.docType === '99' || finalCuit === '0' || finalCuit.length !== 11)) {
+        return { message: `Para la condición '${result.data.ivaCondition}', se requiere un CUIT válido.` }
+    }
+
+
+
     try {
         await db.client.create({
             data: {
                 userId: session.userId,
                 name: result.data.name,
                 docType: result.data.docType,
-                cuit: result.data.cuit,
+                cuit: finalCuit,
                 address: result.data.address,
                 ivaCondition: result.data.ivaCondition,
                 email: result.data.email,
@@ -156,6 +167,9 @@ export async function updateClient(prevState: any, formData: FormData) {
     const items = result.data.items ? JSON.parse(result.data.items) : []
     const lastPriceUpdateDate = result.data.lastPriceUpdate ? new Date(result.data.lastPriceUpdate) : null
 
+    // Default CUIT to '0' if empty
+    const finalCuit = (!result.data.cuit || result.data.cuit.trim() === '') ? '0' : result.data.cuit
+
     try {
         // Transaction to update client and replace items
         await db.$transaction(async (tx) => {
@@ -164,7 +178,7 @@ export async function updateClient(prevState: any, formData: FormData) {
                 data: {
                     name: result.data.name,
                     docType: result.data.docType,
-                    cuit: result.data.cuit,
+                    cuit: finalCuit,
                     address: result.data.address,
                     ivaCondition: result.data.ivaCondition,
                     email: result.data.email,
@@ -277,6 +291,54 @@ export async function updateClientAddress(clientId: string, newAddress: string) 
         return { success: true }
     } catch (error: any) {
         console.error("Error updating address:", error)
+        return { success: false, message: error.message }
+    }
+}
+
+export async function toggleClientStatus(ids: string[], isActive: boolean) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    if (!ids || ids.length === 0) return { success: false, message: 'No se seleccionaron clientes' }
+
+    try {
+        await db.client.updateMany({
+            where: {
+                id: { in: ids },
+                userId: session.userId
+            },
+            data: { isActive }
+        })
+
+        revalidatePath('/dashboard/clients')
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error toggling status:", error)
+        return { success: false, message: error.message }
+    }
+}
+
+export async function updateClientFrequency(clientId: string, frequency: string) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    const validFrequencies = ['MONTHLY', 'QUARTERLY', 'YEARLY', 'SEMIANNUAL', 'NO']
+    if (!validFrequencies.includes(frequency)) {
+        return { success: false, message: 'Frecuencia inválida' }
+    }
+
+    try {
+        await db.client.update({
+            where: {
+                id: clientId,
+                userId: session.userId
+            },
+            data: { priceUpdateFrequency: frequency }
+        })
+        revalidatePath('/dashboard/clients')
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error updating frequency:", error)
         return { success: false, message: error.message }
     }
 }

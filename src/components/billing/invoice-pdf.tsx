@@ -197,9 +197,10 @@ type InvoicePDFProps = {
     client: any;
     items: any[];
     qrImage?: string | null;
+    barcodeImage?: string | null;
 };
 
-export const InvoicePDF = ({ invoice, user, client, items, qrImage }: InvoicePDFProps) => {
+export const InvoicePDF = ({ invoice, user, client, items, qrImage, barcodeImage }: InvoicePDFProps) => {
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString('es-AR');
     };
@@ -215,7 +216,7 @@ export const InvoicePDF = ({ invoice, user, client, items, qrImage }: InvoicePDF
 
     const address = config.businessAddress || user.address || 'Dirección no especificada'
     const phone = config.businessPhone || ''
-    const email = user.email || ''
+    const email = config.businessEmail || user.email || ''
 
     return (
         <Document>
@@ -286,7 +287,7 @@ export const InvoicePDF = ({ invoice, user, client, items, qrImage }: InvoicePDF
                         <Text style={styles.clientLabel}>Señor(es):</Text>
                         <Text style={[styles.clientValue, { fontWeight: 'bold' }]}>{client.name}</Text>
                         <Text style={styles.clientLabel}>CUIT:</Text>
-                        <Text style={styles.clientValue}>{client.cuit}</Text>
+                        <Text style={styles.clientValue}>{client.cuit === '0' ? 'Sin precisar' : client.cuit}</Text>
                     </View>
                     <View style={styles.clientRow}>
                         <Text style={styles.clientLabel}>Domicilio:</Text>
@@ -364,7 +365,12 @@ export const InvoicePDF = ({ invoice, user, client, items, qrImage }: InvoicePDF
                                     <Text style={{ fontSize: 9 }}>Fecha Vto. CAE: {invoice.caeExpiresAt ? formatDate(invoice.caeExpiresAt) : ''}</Text>
                                     <Text style={{ fontSize: 8, color: '#666', marginTop: 4 }}>Comprobante Autorizado</Text>
                                 </View>
-                                {qrImage && <Image src={qrImage} style={styles.qrCode} />}
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    {qrImage && <Image src={qrImage} style={styles.qrCode} />}
+                                    {barcodeImage && (
+                                        <Image src={barcodeImage} style={{ width: 150, height: 35, marginTop: 5 }} />
+                                    )}
+                                </View>
                             </>
                         ) : (
                             <View style={{ height: 50 }} />

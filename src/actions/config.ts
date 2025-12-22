@@ -57,6 +57,9 @@ export async function updateConfig(prevState: any, formData: FormData) {
     updateData.businessPhone = businessPhone
     updateData.businessEmail = email // Map the form 'email' field to businessEmail in config
     updateData.logoUrl = logoUrl
+    updateData.fantasyName = fantasyName
+    updateData.emailSubject = emailSubject
+    updateData.emailBody = emailBody
 
     // Auto Billing
     const autoBillingEnabled = formData.get('autoBillingEnabled') === 'on'

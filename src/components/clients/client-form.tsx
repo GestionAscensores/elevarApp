@@ -61,6 +61,8 @@ type EquipmentItem = {
 export function ClientForm() {
     const [state, action] = useActionState(createClient, undefined)
     const router = useRouter()
+    const [isCuitRequired, setIsCuitRequired] = useState(true)
+    const [docType, setDocType] = useState('80')
 
     // Equipment List State
     const [items, setItems] = useState<EquipmentItem[]>([
@@ -108,19 +110,49 @@ export function ClientForm() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="cuit">CUIT / DNI (Sin guiones)</Label>
-                            <Input
-                                id="cuit"
-                                name="cuit"
-                                placeholder="30123456789"
-                                required
-                                maxLength={11}
-                                pattern="[0-9]*"
-                                onChange={(e) => {
-                                    const val = e.target.value.replace(/\D/g, '')
-                                    e.target.value = val
-                                }}
-                            />
+                            <Label htmlFor="cuit">Documento (CUIT / DNI)</Label>
+                            <div className="flex gap-2">
+                                <div className="w-[110px]">
+                                    <Select name="docType" value={docType} onValueChange={(v) => {
+                                        setDocType(v)
+                                        const cuitInput = document.getElementById('cuit') as HTMLInputElement
+                                        if (v === '99') {
+                                            cuitInput.value = ''
+                                            cuitInput.readOnly = true
+                                            setIsCuitRequired(false)
+                                            // Optional: Reset IVA to Consumidor Final if it was RI? 
+                                            // We can't easily change the other select without controlled state for it too.
+                                            // But backend validation will catch it.
+                                        } else {
+                                            cuitInput.readOnly = false
+                                            setIsCuitRequired(true)
+                                        }
+                                    }}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="80">CUIT</SelectItem>
+                                            <SelectItem value="96">DNI</SelectItem>
+                                            <SelectItem value="99">S/D</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex-1">
+                                    <Input
+                                        id="cuit"
+                                        name="cuit"
+                                        placeholder="Sin guiones"
+                                        required={isCuitRequired}
+                                        maxLength={11}
+                                        pattern="[0-9]*"
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '')
+                                            e.target.value = val
+                                        }}
+                                    />
+                                </div>
+                            </div>
                             {state?.errors?.cuit && <p className="text-sm text-red-500">{state.errors.cuit}</p>}
                         </div>
 
@@ -131,7 +163,21 @@ export function ClientForm() {
 
                         <div className="space-y-2">
                             <Label htmlFor="ivaCondition">Condición IVA</Label>
-                            <Select name="ivaCondition" required>
+                            <Select name="ivaCondition" required onValueChange={(v) => {
+                                const docTypeSelect = document.querySelector('button[role="combobox"]') // Might be tricky to get docType state without state variable
+                                // Better approach: use a state for docType too or check the hidden select if possible.
+                                // Actually, let's just warn or reset docType if needed? 
+                                // Simplified: If they pick RI/Mono/Exento, we force CUIT requirment visually if checks fail.
+                                // But real logic is: if docType is '99', prevent picking RI.
+                                const isFormal = ['Responsable Inscripto', 'Monotributo', 'Exento'].includes(v)
+                                const cuitInput = document.getElementById('cuit') as HTMLInputElement
+
+                                if (isFormal && !isCuitRequired) {
+                                    // If currently S/D (implied by !isCuitRequired or check docType state), warn
+                                    toast.warning("Para esta condición de IVA, debe ingresar un CUIT.")
+                                    // Ideally, we would switch docType to 80 here, but we need state for that.
+                                }
+                            }}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Seleccione..." />
                                 </SelectTrigger>
@@ -150,7 +196,8 @@ export function ClientForm() {
                         </div>
 
                         <div className="space-y-2">
-                            <Input id="phone" name="phone" placeholder="11 1234 5678" />
+                            <Label htmlFor="phone">Teléfono</Label>
+                            <Input id="phone" name="phone" placeholder="Ej: 11 1234-5678" />
                         </div>
 
                         <div className="space-y-2">
@@ -163,6 +210,7 @@ export function ClientForm() {
                                     {UPDATE_FREQUENCIES.map((freq) => (
                                         <SelectItem key={freq.value} value={freq.value}>{freq.label}</SelectItem>
                                     ))}
+                                    <SelectItem value="NO">Sin Actualización</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

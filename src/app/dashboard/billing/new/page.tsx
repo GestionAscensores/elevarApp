@@ -9,7 +9,15 @@ import { db } from '@/lib/db'
 import { verifySession } from '@/lib/session'
 
 export default async function NewInvoicePage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-    const clients = await getClients()
+    const rawClients = await getClients()
+    const clients = rawClients.map(c => ({
+        ...c,
+        items: c.items.map(i => ({
+            ...i,
+            quantity: Number(i.quantity),
+            price: Number(i.price)
+        }))
+    }))
     const rawProducts = await getProducts()
     // Serialize products for Client Component
     const products = rawProducts.map(p => ({

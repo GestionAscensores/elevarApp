@@ -127,9 +127,9 @@ export function EditClientForm({ client }: { client: any }) {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {DOC_TYPES.map((dt) => (
-                                                <SelectItem key={dt.value} value={dt.value}>{dt.label}</SelectItem>
-                                            ))}
+                                            <SelectItem value="80">CUIT</SelectItem>
+                                            <SelectItem value="96">DNI</SelectItem>
+                                            <SelectItem value="99">S/D</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -137,9 +137,9 @@ export function EditClientForm({ client }: { client: any }) {
                                     <Input
                                         id="cuit"
                                         name="cuit"
-                                        required
+                                        required={docType !== '99'}
                                         readOnly={docType === '99'}
-                                        defaultValue={docType === '99' ? '0' : client.cuit}
+                                        defaultValue={docType === '99' ? '' : client.cuit}
                                         key={docType}
                                     />
                                 </div>
@@ -154,7 +154,12 @@ export function EditClientForm({ client }: { client: any }) {
 
                         <div className="space-y-2">
                             <Label htmlFor="ivaCondition">Condición IVA</Label>
-                            <Select name="ivaCondition" defaultValue={client.ivaCondition} required>
+                            <Select name="ivaCondition" defaultValue={client.ivaCondition} required onValueChange={(v) => {
+                                const isFormal = ['Responsable Inscripto', 'Monotributo', 'Exento'].includes(v)
+                                if (isFormal && docType === '99') {
+                                    toast.warning("Para esta condición de IVA, debe ingresar un CUIT.")
+                                }
+                            }}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Seleccione..." />
                                 </SelectTrigger>
@@ -172,7 +177,8 @@ export function EditClientForm({ client }: { client: any }) {
                         </div>
 
                         <div className="space-y-2">
-                            <Input id="phone" name="phone" defaultValue={client.phone || ''} />
+                            <Label htmlFor="phone">Teléfono</Label>
+                            <Input id="phone" name="phone" defaultValue={client.phone || ''} placeholder="Ej: 11 1234-5678" />
                         </div>
 
                         <div className="space-y-2">
@@ -185,6 +191,7 @@ export function EditClientForm({ client }: { client: any }) {
                                     {UPDATE_FREQUENCIES.map((freq) => (
                                         <SelectItem key={freq.value} value={freq.value}>{freq.label}</SelectItem>
                                     ))}
+                                    <SelectItem value="NO">Sin Actualización</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

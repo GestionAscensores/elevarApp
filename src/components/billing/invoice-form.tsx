@@ -158,6 +158,24 @@ export function InvoiceForm({ clients, products, isQuote, initialData }: Props) 
 
     const total = items.reduce((acc, item) => acc + (item.quantity * item.price), 0)
 
+    // Concatenate Product Name + Description for submission
+    const submitItems = items.map(item => {
+        if (!item.productId || item.productId === 'custom' || item.productId === 'create_new') {
+            return item
+        }
+        const prod = localProducts.find(p => p.id === item.productId)
+        if (!prod) return item
+
+        const finalDesc = item.description
+            ? `${prod.name} ${item.description}`
+            : prod.name
+
+        return {
+            ...item,
+            description: finalDesc
+        }
+    })
+
     return (
         <Card className="w-full max-w-4xl mx-auto">
             <CardHeader>
@@ -236,19 +254,21 @@ export function InvoiceForm({ clients, products, isQuote, initialData }: Props) 
                         <div className="space-y-4">
                             {items.map((item, index) => (
                                 <div key={item.id} className="grid grid-cols-12 gap-2 items-end border p-4 rounded-lg bg-muted/20">
-                                    <div className="col-span-12 md:col-span-3 space-y-1">
+                                    <div className="col-span-12 md:col-span-3 space-y-1 relative">
                                         <Label className="text-xs">Producto</Label>
                                         <Select value={item.productId} onValueChange={(v) => updateItem(item.id, 'productId', v)}>
-                                            <SelectTrigger className="h-8">
-                                                <SelectValue placeholder="Seleccione..." />
+                                            <SelectTrigger className="h-8 w-full overflow-hidden">
+                                                <SelectValue placeholder="Seleccione..." className="truncate" />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="max-w-[400px]">
                                                 <SelectItem value="custom">-- Personalizado --</SelectItem>
                                                 <SelectItem value="create_new" className="font-medium text-blue-600 dark:text-blue-400">
                                                     + Crear nuevo producto...
                                                 </SelectItem>
                                                 {localProducts.map(p => (
-                                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                                    <SelectItem key={p.id} value={p.id} className="truncate">
+                                                        {p.name}
+                                                    </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -316,7 +336,7 @@ export function InvoiceForm({ clients, products, isQuote, initialData }: Props) 
                         </div>
                     </div>
 
-                    <input type="hidden" name="items" value={JSON.stringify(items)} />
+                    <input type="hidden" name="items" value={JSON.stringify(submitItems)} />
 
                     <div className="flex justify-end pt-4 border-t">
                         <FormButtons />

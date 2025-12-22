@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { verifySession } from '@/lib/session'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { authorizeInvoice, getLastVoucher } from '@/lib/afip/wsfe'
 import { redirect } from 'next/navigation'
 
@@ -283,7 +283,8 @@ export async function createInvoice(prevState: any, formData: FormData) {
                         quantity: item.quantity,
                         unitPrice: item.price,
                         subtotal: item.quantity * item.price,
-                        ivaRate: item.ivaRate
+                        ivaRate: item.ivaRate,
+                        productId: (item.productId && item.productId !== 'custom') ? item.productId : undefined
                     })),
                 },
                 paymentCondition,
@@ -797,6 +798,7 @@ export async function createCreditNote(invoiceId: string) {
         })
 
         revalidatePath('/dashboard/billing')
+        revalidateTag(`monotributo-${session.userId}`)
         return { success: true, invoiceId: nc.id }
 
     } catch (e: any) {

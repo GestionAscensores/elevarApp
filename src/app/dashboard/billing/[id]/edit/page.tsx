@@ -16,9 +16,14 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
     if (!invoice) notFound()
     if (invoice.status !== 'DRAFT' && invoice.status !== 'QUOTE') return <div>Solo se pueden editar borradores o presupuestos.</div>
 
-    const products = await db.product.findMany({
+    const rawProducts = await db.product.findMany({
         where: { userId: session.userId }
     })
+    const products = rawProducts.map(p => ({
+        ...p,
+        price: Number(p.price),
+        ivaRate: String(p.ivaRate)
+    }))
 
     // Determinar título según tipo de documento
     const getTitle = () => {

@@ -10,9 +10,10 @@ import { EmailButton } from '@/components/billing/email-button'
 import { CreateCreditNoteButton } from '@/components/billing/nc-button'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Printer, Loader2, Copy, CheckCircle, DollarSign } from 'lucide-react'
+import { Printer, Loader2, Copy, CheckCircle, DollarSign, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { togglePaymentStatus, markMultipleAsPaid } from '@/actions/payments'
+import { sendMassEmails } from '@/actions/email'
 
 export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
     const [selected, setSelected] = useState<string[]>([])
@@ -92,6 +93,27 @@ export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
         }
     }
 
+    // Bulk Email Action
+    const handleBulkEmail = async () => {
+        if (selected.length === 0) return
+        if (!confirm(`¿Desea enviar por correo ${selected.length} facturas? Esto tomará unos segundos para evitar saturación.`)) return
+
+        setLoading(true)
+        try {
+            const res = await sendMassEmails(selected)
+            if (res.success) {
+                toast.success(res.message)
+                setSelected([]) // Clear selection on success
+            } else {
+                toast.warning(res.message) // Warning if some failed
+            }
+        } catch (error) {
+            toast.error('Error al enviar correos')
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const handleTogglePayment = async (e: React.MouseEvent, id: string, currentStatus: string) => {
         e.stopPropagation() // Prevent row click
         // Optimistic update could go here but let's rely on server for now
@@ -117,6 +139,10 @@ export function InvoiceHistoryTable({ invoices }: { invoices: any[] }) {
                         <Button size="sm" onClick={handleBulkPrint} disabled={loading} variant="outline">
                             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
                             Imprimir
+                        </Button>
+                        <Button size="sm" onClick={handleBulkEmail} disabled={loading} variant="secondary">
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                            Enviar x Mail
                         </Button>
                     </div>
                 </div>
