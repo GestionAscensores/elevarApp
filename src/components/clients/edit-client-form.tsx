@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormStatus, useFormState } from 'react-dom'
+import { useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { updateClient } from '@/actions/clients'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -51,6 +52,7 @@ const EQUIPMENT_TYPES = [
 const UPDATE_FREQUENCIES = [
     { value: 'MONTHLY', label: 'Mensual' },
     { value: 'QUARTERLY', label: 'Trimestral' },
+    { value: 'SEMIANNUAL', label: 'Semestral' },
     { value: 'YEARLY', label: 'Anual' },
 ]
 
@@ -62,7 +64,7 @@ type EquipmentItem = {
 }
 
 export function EditClientForm({ client }: { client: any }) {
-    const [state, action] = useFormState(updateClient, undefined)
+    const [state, action] = useActionState(updateClient, undefined)
     const router = useRouter()
 
     const [docType, setDocType] = useState(client.docType || '80')
@@ -185,6 +187,17 @@ export function EditClientForm({ client }: { client: any }) {
                                     ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="lastPriceUpdate">Última Actualización / Inicio Ciclo</Label>
+                            <Input
+                                type="date"
+                                id="lastPriceUpdate"
+                                name="lastPriceUpdate"
+                                defaultValue={client.lastPriceUpdate ? new Date(client.lastPriceUpdate).toISOString().split('T')[0] : ''}
+                            />
+                            <p className="text-xs text-muted-foreground">Fecha base para la próxima alerta.</p>
                         </div>
                     </div>
 

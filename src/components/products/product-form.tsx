@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormStatus, useFormState } from 'react-dom'
+import { useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { createProduct } from '@/actions/products'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,7 +26,7 @@ function SubmitButton() {
 }
 
 export function ProductForm() {
-    const [state, action] = useFormState(createProduct, undefined)
+    const [state, action] = useActionState(createProduct, undefined)
     const router = useRouter()
 
     useEffect(() => {

@@ -76,6 +76,11 @@ export async function deleteUser(userId: string) {
             return { error: 'No puedes eliminar tu propia cuenta.' }
         }
 
+        const userToDelete = await db.user.findUnique({ where: { id: userId } })
+        if (userToDelete?.email === 'usuariotest@elevarapp.com') {
+            return { error: 'No se puede eliminar al usuario de prueba protegido.' }
+        }
+
         // Logic check: We naturally allow deleting other admins as long as it's not self.
         // Prisma will handle the deletion.
 
@@ -127,9 +132,11 @@ export async function updateUserRole(userId: string, newRole: string) {
 export async function updateUserProfile(userId: string, data: {
     name: string,
     email: string,
-    cuit: string,
+    cuit?: string,
     trialEndsAt?: string,
-    subscriptionExpiresAt?: string
+    subscriptionExpiresAt?: string,
+    afipEnvironment?: string,
+    subscriptionStatus?: string
 }) {
     try {
         const session = await verifySession()
@@ -155,19 +162,45 @@ export async function updateUserProfile(userId: string, data: {
                     NOT: { id: userId }
                 }
             })
-            if (existing) return { error: 'El CUIT ya está en uso por otro usuario.' }
+
+            // EXCEPTION: The Test User is allowed to share a CUIT (e.g. with the Admin)
+            // We check if the *current user being edited* is the test user.
+            const isTestUser = (data.email === 'usuariotest@elevarapp.com');
+
+            if (existing && !isTestUser) {
+                return { error: 'El CUIT ya está en uso por otro usuario.' }
+            }
+        }
+
+        const updateData: any = {
+            name: data.name,
+            email: data.email,
+            cuit: data.cuit || null,
+            trialEndsAt: data.trialEndsAt ? new Date(data.trialEndsAt) : null,
+            subscriptionExpiresAt: data.subscriptionExpiresAt ? new Date(data.subscriptionExpiresAt) : null
+        }
+
+        if (data.subscriptionStatus) {
+            updateData.subscriptionStatus = data.subscriptionStatus
+            // If setting to active, ensure account is enabled
+            if (data.subscriptionStatus === 'active') {
+                updateData.isActive = true
+            }
         }
 
         await db.user.update({
             where: { id: userId },
-            data: {
-                name: data.name,
-                email: data.email,
-                cuit: data.cuit || null,
-                trialEndsAt: data.trialEndsAt ? new Date(data.trialEndsAt) : null,
-                subscriptionExpiresAt: data.subscriptionExpiresAt ? new Date(data.subscriptionExpiresAt) : null
-            }
+            data: updateData
         })
+
+        // Update User Config if AFIP Environment provided
+        if (data.afipEnvironment) {
+            await db.userConfig.upsert({
+                where: { userId: userId },
+                create: { userId: userId, afipEnvironment: data.afipEnvironment },
+                update: { afipEnvironment: data.afipEnvironment }
+            })
+        }
 
         revalidatePath('/dashboard/admin/users')
         return { success: true }

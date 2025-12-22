@@ -1,7 +1,8 @@
 
 'use client'
 
-import { useFormStatus, useFormState } from 'react-dom'
+import { useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { updateProduct } from '@/actions/products'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,7 +31,7 @@ type Props = {
 
 export function EditProductForm({ product }: Props) {
     const updateAction = updateProduct.bind(null, product.id)
-    const [state, action] = useFormState(updateAction, undefined)
+    const [state, action] = useActionState(updateAction, undefined)
     const router = useRouter()
 
     useEffect(() => {

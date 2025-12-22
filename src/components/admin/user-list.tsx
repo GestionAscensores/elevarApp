@@ -51,6 +51,8 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
     const [editCuit, setEditCuit] = useState('')
     const [editTrialEndsAt, setEditTrialEndsAt] = useState('')
     const [editSubscriptionExpiresAt, setEditSubscriptionExpiresAt] = useState('')
+    const [editAfipEnvironment, setEditAfipEnvironment] = useState('TEST')
+    const [editSubscriptionStatus, setEditSubscriptionStatus] = useState('')
 
     const handleToggle = async (userId: string) => {
         setLoading(userId)
@@ -81,6 +83,8 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
             // Format dates for input type="date" (YYYY-MM-DD)
             setEditTrialEndsAt(user.trialEndsAt ? new Date(user.trialEndsAt).toISOString().split('T')[0] : '')
             setEditSubscriptionExpiresAt(user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).toISOString().split('T')[0] : '')
+            setEditAfipEnvironment(user.config?.afipEnvironment || 'TEST')
+            setEditSubscriptionStatus(user.subscriptionStatus || 'trial')
         }
     }
 
@@ -93,7 +97,9 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
                 email: editEmail,
                 cuit: editCuit,
                 trialEndsAt: editTrialEndsAt || undefined,
-                subscriptionExpiresAt: editSubscriptionExpiresAt || undefined
+                subscriptionExpiresAt: editSubscriptionExpiresAt || undefined,
+                afipEnvironment: editAfipEnvironment,
+                subscriptionStatus: editSubscriptionStatus
             })
             if (res.success) {
                 toast.success('Perfil actualizado')
@@ -238,7 +244,7 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
         }
     }
 
-    const formatDate = (date: Date | null) => {
+    const formatDate = (date: string | Date | null) => {
         if (!date) return 'N/A'
         return new Date(date).toLocaleDateString('es-AR', {
             day: '2-digit',
@@ -247,7 +253,7 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
         })
     }
 
-    const formatFullDate = (date: Date | null) => {
+    const formatFullDate = (date: string | Date | null) => {
         if (!date) return 'Null'
         return new Date(date).toLocaleString('es-AR')
     }
@@ -362,15 +368,17 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
                                             >
                                                 <Shield className="h-4 w-4 text-purple-500" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => openDialog(user, 'delete')}
-                                                disabled={loading === user.id}
-                                                title="Eliminar Usuario"
-                                            >
-                                                <Trash2 className="h-4 w-4 text-red-600" />
-                                            </Button>
+                                            {user.email !== 'usuariotest@elevarapp.com' && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => openDialog(user, 'delete')}
+                                                    disabled={loading === user.id}
+                                                    title="Eliminar Usuario"
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                                </Button>
+                                            )}
                                         </>
                                     )}
                                 </div>
@@ -573,6 +581,35 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
                                     onChange={(e) => setEditSubscriptionExpiresAt(e.target.value)}
                                 />
                                 <p className="text-[10px] text-muted-foreground">Original: {formatDate(selectedUser?.subscriptionExpiresAt ?? null)}</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <Label>Estado Suscripción</Label>
+                                <Select value={editSubscriptionStatus} onValueChange={setEditSubscriptionStatus}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="trial">Prueba (Trial)</SelectItem>
+                                        <SelectItem value="active">Activa (Full)</SelectItem>
+                                        <SelectItem value="suspended">Suspendida</SelectItem>
+                                        <SelectItem value="cancelled">Cancelada</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Entorno AFIP</Label>
+                                <Select value={editAfipEnvironment} onValueChange={setEditAfipEnvironment}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="TEST">TEST (Homologación)</SelectItem>
+                                        <SelectItem value="PRODUCTION">PRODUCCIÓN</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 

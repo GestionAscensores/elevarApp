@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormStatus, useFormState } from 'react-dom'
+import { useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { updateInvoice } from '@/actions/billing'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,7 +34,7 @@ type InvoiceItem = {
 }
 
 export function EditInvoiceForm({ invoice, products }: { invoice: any, products: any[] }) {
-    const [state, action] = useFormState(updateInvoice, undefined)
+    const [state, action] = useActionState(updateInvoice, undefined)
     const router = useRouter()
 
     const [items, setItems] = useState<InvoiceItem[]>(

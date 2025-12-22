@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id                       String      @id @default(cuid())
-  cuit                     String?     @unique
+  cuit                     String?
   password                 String?
   email                    String?     @unique
   name                     String?
@@ -46,7 +46,7 @@ model UserConfig {
   afipToken         String?
   afipSign          String?
   afipExpiration    DateTime?
-  afipEnvironment   String    @default("TEST") // 'TEST' | 'PRODUCTION'
+  afipEnvironment   String    @default("PRODUCTION") // 'TEST' | 'PRODUCTION'
   salePoint         Int       @default(1)
   logoUrl           String?
   emailTemplate     String?
@@ -82,7 +82,8 @@ model Client {
   updatedAt             DateTime          @updatedAt
   docType               String            @default("80")
   excludeFromMassUpdate Boolean           @default(false)
-  priceUpdateFrequency  String            @default("MONTHLY")
+  priceUpdateFrequency  String            @default("MONTHLY") // Enum-like: MONTHLY, QUARTERLY, SEMIANNUAL, ANNUAL
+  lastPriceUpdate       DateTime?         // Reference date for next update calculation
   user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   items                 ClientEquipment[]
   equipment             Equipment[]

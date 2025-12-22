@@ -259,6 +259,8 @@ export async function createInvoice(prevState: any, formData: FormData) {
         const { generateAfipQrUrl } = await import('@/lib/afip/afip-qr')
         const qrUrl = generateAfipQrUrl(qrPayloadFinal)
 
+        console.log("Generated QR URL:", qrUrl)
+
         // 6. Save to DB
         const invoice = await db.invoice.create({
             data: {
@@ -555,6 +557,8 @@ export async function emitInvoice(invoiceId: string) {
 
         const { generateAfipQrUrl } = await import('@/lib/afip/afip-qr')
         const qrUrl = generateAfipQrUrl(qrPayload)
+
+        console.log("Generated QR URL:", qrUrl)
 
         // 6. Update Invoice in DB
         await db.invoice.update({

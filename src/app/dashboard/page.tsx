@@ -17,6 +17,7 @@ import { TrialGauge } from "@/components/dashboard/trial-gauge"
 import { checkAndTriggerAutoBilling } from "@/lib/billing-scheduler"
 import { AutoBillingNotifier } from "@/components/dashboard/auto-billing-notifier"
 import { PendingDraftsAlert } from "@/components/dashboard/pending-drafts-alert"
+import { PriceAlertsWidget } from "@/components/dashboard/price-alerts-widget"
 
 export default async function DashboardPage() {
     const session = await verifySession()
@@ -61,6 +62,7 @@ export default async function DashboardPage() {
         <div className="space-y-6">
             <AutoBillingNotifier result={autoBillingResult} />
             <PendingDraftsAlert count={metrics?.pendingDrafts || 0} />
+            <PriceAlertsWidget />
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                 <div className="flex items-center gap-2">

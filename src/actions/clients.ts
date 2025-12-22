@@ -14,7 +14,8 @@ const ClientSchema = z.object({
     ivaCondition: z.string().min(1, "Seleccione la condición frente al IVA"),
     email: z.string().email("Email inválido").optional().or(z.literal('')),
     phone: z.string().optional(),
-    priceUpdateFrequency: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY']).default('MONTHLY'),
+    priceUpdateFrequency: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY', 'SEMIANNUAL']).optional().default('MONTHLY'),
+    lastPriceUpdate: z.string().optional(),
     // items is a JSON string of array { type, quantity, price }
     items: z.string().optional(),
 })
@@ -53,6 +54,7 @@ export async function createClient(prevState: any, formData: FormData) {
     }
 
     const items = result.data.items ? JSON.parse(result.data.items) : []
+    const lastPriceUpdateDate = result.data.lastPriceUpdate ? new Date(result.data.lastPriceUpdate) : null
 
     try {
         await db.client.create({
@@ -66,6 +68,7 @@ export async function createClient(prevState: any, formData: FormData) {
                 email: result.data.email,
                 phone: result.data.phone,
                 priceUpdateFrequency: result.data.priceUpdateFrequency,
+                lastPriceUpdate: lastPriceUpdateDate,
                 items: {
                     create: items.map((item: any) => ({
                         type: item.type,
@@ -151,6 +154,7 @@ export async function updateClient(prevState: any, formData: FormData) {
     }
 
     const items = result.data.items ? JSON.parse(result.data.items) : []
+    const lastPriceUpdateDate = result.data.lastPriceUpdate ? new Date(result.data.lastPriceUpdate) : null
 
     try {
         // Transaction to update client and replace items
@@ -166,6 +170,7 @@ export async function updateClient(prevState: any, formData: FormData) {
                     email: result.data.email,
                     phone: result.data.phone,
                     priceUpdateFrequency: result.data.priceUpdateFrequency,
+                    lastPriceUpdate: lastPriceUpdateDate,
                 }
             })
 

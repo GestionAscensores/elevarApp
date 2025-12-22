@@ -10,7 +10,7 @@ interface PaletteProviderState {
 }
 
 const initialState: PaletteProviderState = {
-    palette: "blue",
+    palette: "navy",
     setPalette: () => null,
 }
 
@@ -18,7 +18,7 @@ const PaletteProviderContext = React.createContext<PaletteProviderState>(initial
 
 export function PaletteProvider({
     children,
-    defaultPalette = "blue",
+    defaultPalette = "navy",
     storageKey = "elevar-ui-palette",
     ...props
 }: {
@@ -27,7 +27,7 @@ export function PaletteProvider({
     storageKey?: string
 }) {
     const [palette, setPalette] = React.useState<Palette>(
-        () => (typeof window !== "undefined" ? (localStorage.getItem(storageKey) as Palette) : defaultPalette) || defaultPalette
+        () => (typeof window !== "undefined" ? (localStorage.getItem(storageKey) as Palette) : defaultPalette) || "navy"
     )
 
     React.useEffect(() => {

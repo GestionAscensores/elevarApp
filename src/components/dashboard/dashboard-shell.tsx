@@ -71,9 +71,13 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
     }
 
     const handleSignOut = async () => {
-        // Try both logouts
-        await signOut({ redirect: false })
-        await logout() // This redirects to login
+        // Use client-side signOut only, directing to login page
+        // This clears the NextAuth session cookie
+        await signOut({ callbackUrl: '/login' })
+
+        // We don't call server-side logout() because signOut handles the redirection 
+        // and cookie clearing. Calling it after might cause the "Runtime Error" 
+        // if the component unmounts or context is lost during redirect.
     }
 
     // Determine Display Title

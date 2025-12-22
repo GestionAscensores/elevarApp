@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormStatus, useFormState } from 'react-dom'
+import { useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { createClient } from '@/actions/clients'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,6 +47,7 @@ const EQUIPMENT_TYPES = [
 const UPDATE_FREQUENCIES = [
     { value: 'MONTHLY', label: 'Mensual' },
     { value: 'QUARTERLY', label: 'Trimestral' },
+    { value: 'SEMIANNUAL', label: 'Semestral' },
     { value: 'YEARLY', label: 'Anual' },
 ]
 
@@ -57,7 +59,7 @@ type EquipmentItem = {
 }
 
 export function ClientForm() {
-    const [state, action] = useFormState(createClient, undefined)
+    const [state, action] = useActionState(createClient, undefined)
     const router = useRouter()
 
     // Equipment List State
@@ -163,6 +165,16 @@ export function ClientForm() {
                                     ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="lastPriceUpdate">Última Actualización / Inicio Ciclo</Label>
+                            <Input
+                                type="date"
+                                id="lastPriceUpdate"
+                                name="lastPriceUpdate"
+                            />
+                            <p className="text-xs text-muted-foreground">Fecha base para la próxima alerta.</p>
                         </div>
                     </div>
 

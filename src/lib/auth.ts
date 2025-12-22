@@ -9,11 +9,14 @@ import { cookies } from "next/headers"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
+    debug: true,
+    trustHost: true,
+    secret: process.env.NEXTAUTH_SECRET,
     adapter: PrismaAdapter(db),
     providers: [
         Google({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         }),
         Credentials({
             name: "Email/Contraseña",
@@ -34,11 +37,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         role: true,
                         subscriptionStatus: true,
                         subscriptionExpiresAt: true,
-                        isEmailVerified: true
+                        isEmailVerified: true,
+                        isActive: true
                     }
                 })
 
                 if (!user || !user.password) return null
+
+                if (!user.isActive) {
+                    console.log(`❌ Login attempt by inactive user: ${user.email}`)
+                    return null
+                }
 
                 const passwordMatch = await bcrypt.compare(
                     credentials.password as string,
@@ -75,7 +84,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     callbacks: {
         ...authConfig.callbacks,
-        async jwt({ token, user, account, profile, trigger }) {
+        async signIn({ user, account, profile }) {
+            console.log("---- SIGN IN DEBUG ----")
+            console.log("User:", user?.email, user?.id)
+            console.log("Profile:", profile?.email)
+            console.log("Account provider:", account?.provider)
+            // Check if user is active (for OAuth specifically, though authorizes covers credentials)
+
+            if (user.email) {
+                const dbUser = await db.user.findUnique({
+                    where: { email: user.email },
+                    select: { isActive: true }
+                })
+
+                if (dbUser && !dbUser.isActive) {
+                    return false // Deny login
+                }
+            }
+
+            // GUARDIAN: Prevent accidental linking of hsascensores to amilcarserra
+            // This happens if the admin is logged in and tries to "sign up" with the new google account
+            // NextAuth tries to link them. We want to FORCE a separate account.
+            if (
+                account?.provider === 'google' &&
+                profile?.email === 'hsascensores@gmail.com' &&
+                user.email === 'amilcarserra@gmail.com'
+            ) {
+                console.log("🛑 Prevented accidental linking of hsascensores to admin account.")
+                return false
+            }
+
+            // Retroactive fix for existing users
+            if (user.email) {
+                try {
+                    // Check if trial is required
+                    const existingUser = await db.user.findUnique({ where: { email: user.email } })
+                    if (existingUser && !existingUser.trialEndsAt && existingUser.subscriptionStatus === 'trial') {
+                        const trialEndsAt = new Date()
+                        trialEndsAt.setDate(trialEndsAt.getDate() + 15)
+                        await db.user.update({ where: { id: existingUser.id }, data: { trialEndsAt } })
+                    }
+                } catch (e) { console.error(e) }
+            }
+            return true
+        }, async jwt({ token, user, account, profile, trigger }) {
             // 1. Initial Sign In (Credentials or OAuth)
             if (user) {
                 token.sub = user.id
@@ -139,21 +191,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
             return session
         },
-        async signIn({ user }) {
-            // Retroactive fix for existing users
-            if (user.email) {
-                try {
-                    // Check if trial is required
-                    const existingUser = await db.user.findUnique({ where: { email: user.email } })
-                    if (existingUser && !existingUser.trialEndsAt && existingUser.subscriptionStatus === 'trial') {
-                        const trialEndsAt = new Date()
-                        trialEndsAt.setDate(trialEndsAt.getDate() + 15)
-                        await db.user.update({ where: { id: existingUser.id }, data: { trialEndsAt } })
-                    }
-                } catch (e) { console.error(e) }
-            }
-            return true
-        }
+
     }
 })
 

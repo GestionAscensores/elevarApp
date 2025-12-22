@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from "next-auth"
 
 export const authConfig: NextAuthConfig = {
+    secret: process.env.NEXTAUTH_SECRET,
     providers: [], // Providers are configured in auth.ts for Node runtime
     pages: {
         signIn: "/login",

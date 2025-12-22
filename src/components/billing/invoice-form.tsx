@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormStatus, useFormState } from 'react-dom'
+import { useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { handleInvoiceAction } from '@/actions/billing'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -58,7 +59,7 @@ type InvoiceItem = {
 }
 
 export function InvoiceForm({ clients, products, isQuote, initialData }: Props) {
-    const [state, action] = useFormState(handleInvoiceAction, undefined)
+    const [state, action] = useActionState(handleInvoiceAction, undefined)
     const router = useRouter()
     const [items, setItems] = useState<InvoiceItem[]>(() => {
         if (initialData?.items && initialData.items.length > 0) {
