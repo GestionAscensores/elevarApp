@@ -66,7 +66,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
             label: 'Inventario',
             icon: CreditCard,
             children: [
-                { href: '/dashboard/pricing', label: 'Lista de Precios', icon: FileText },
+                { href: '/dashboard/pricing', label: 'Repuestos', icon: FileText },
                 { href: '/dashboard/inventory/scan', label: 'Escanear Stock', icon: Barcode },
             ]
         },

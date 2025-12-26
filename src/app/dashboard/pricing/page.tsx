@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { InlinePriceEdit } from '@/components/products/inline-price-edit'
 import { InlineNameEdit } from '@/components/products/inline-name-edit'
+import { ProductImageCell } from '@/components/products/product-image-cell'
 
 export default async function PricingPage() {
     const products = await getProducts()
@@ -17,7 +18,7 @@ export default async function PricingPage() {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight">Gestión de Precios</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Gestión de Repuestos</h1>
                 <Button asChild>
                     <Link href="/dashboard/pricing/new">
                         <Plus className="mr-2 h-4 w-4" /> Nuevo Producto
@@ -29,8 +30,8 @@ export default async function PricingPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Lista de Precios</CardTitle>
-                    <CardDescription>Administra tus productos y servicios.</CardDescription>
+                    <CardTitle>Lista de Repuestos</CardTitle>
+                    <CardDescription>Administra tus productos, repuestos y servicios.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="mb-4 flex items-center gap-2">
@@ -43,6 +44,7 @@ export default async function PricingPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[80px] text-center">Foto</TableHead>
                                 <TableHead>Código</TableHead>
                                 <TableHead>Descripción / Nombre</TableHead>
                                 <TableHead>Moneda</TableHead>
@@ -54,13 +56,16 @@ export default async function PricingPage() {
                         <TableBody>
                             {products.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                                    <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
                                         No hay productos registrados.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 products.map((product) => (
                                     <TableRow key={product.id}>
+                                        <TableCell>
+                                            <ProductImageCell id={product.id} initialImageUrl={product.imageUrl} name={product.name} />
+                                        </TableCell>
                                         <TableCell className="font-mono text-xs">{product.code || '-'}</TableCell>
                                         <TableCell>
                                             <InlineNameEdit id={product.id} initialName={product.name} />
