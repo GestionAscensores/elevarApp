@@ -57,10 +57,30 @@ export async function updateProductImage(id: string, base64Image: string) {
             }
         })
         revalidatePath('/dashboard/inventory/scan')
+        revalidatePath('/dashboard/pricing')
         return { success: true }
     } catch (error) {
         console.error('Error updating image:', error)
         return { error: 'Error al guardar imagen' }
+    }
+}
+
+export async function deleteProductImage(id: string) {
+    const session = await verifySession()
+    if (!session) return { error: 'No autorizado' }
+
+    try {
+        await db.product.update({
+            where: { id, userId: session.userId },
+            data: {
+                imageUrl: null // Clear image
+            }
+        })
+        revalidatePath('/dashboard/inventory/scan')
+        revalidatePath('/dashboard/pricing')
+        return { success: true }
+    } catch (error) {
+        return { error: 'Error al eliminar imagen' }
     }
 }
 

@@ -44,7 +44,7 @@ export default async function PricingPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[80px] text-center">Foto</TableHead>
+                                <TableHead className="w-[100px] text-center">Foto</TableHead>
                                 <TableHead>Código</TableHead>
                                 <TableHead>Descripción / Nombre</TableHead>
                                 <TableHead>Moneda</TableHead>

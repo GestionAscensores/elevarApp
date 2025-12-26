@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Camera, Upload, Loader2, Image as ImageIcon } from 'lucide-react'
+import { Camera, Upload, Loader2, Image as ImageIcon, X, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { updateProductImage } from '@/actions/inventory'
+import { updateProductImage, deleteProductImage } from '@/actions/inventory'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
@@ -20,6 +20,21 @@ export function ProductImageCell({ id, initialImageUrl, name }: ProductImageCell
 
     const handleUploadClick = () => {
         fileInputRef.current?.click()
+    }
+
+    const handleDeleteClick = async (e: React.MouseEvent) => {
+        e.stopPropagation() // Prevent triggering upload
+        if (!confirm("¿Eliminar imagen?")) return
+
+        setLoading(true)
+        const result = await deleteProductImage(id)
+        setLoading(false)
+        if (result.success) {
+            setImageUrl(null)
+            toast.success("Imagen eliminada")
+        } else {
+            toast.error("Error al eliminar")
+        }
     }
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,27 +92,37 @@ export function ProductImageCell({ id, initialImageUrl, name }: ProductImageCell
     return (
         <div className="flex items-center justify-center">
             <div
-                className="relative h-12 w-12 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden cursor-pointer group hover:border-slate-300 transition-colors"
+                className="relative h-20 w-20 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden cursor-pointer group hover:border-slate-300 transition-all shadow-sm hover:shadow-md"
                 onClick={handleUploadClick}
             >
                 {imageUrl ? (
-                    <img
-                        src={imageUrl}
-                        alt={name}
-                        className="h-full w-full object-cover"
-                    />
+                    <>
+                        <img
+                            src={imageUrl}
+                            alt={name}
+                            className="h-full w-full object-cover"
+                        />
+                        {/* Delete Button (Visible on Hover) */}
+                        <div
+                            className="absolute top-1 right-1 p-1 bg-red-500/80 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                            onClick={handleDeleteClick}
+                            title="Eliminar imagen"
+                        >
+                            <X className="h-3 w-3" />
+                        </div>
+                    </>
                 ) : (
                     <div className="flex h-full w-full items-center justify-center text-slate-300 group-hover:text-slate-400">
-                        <ImageIcon className="h-5 w-5" />
+                        <ImageIcon className="h-8 w-8" />
                     </div>
                 )}
 
                 {/* Overlay for hover/loading */}
-                <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${loading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity pointer-events-none ${loading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                     {loading ? (
-                        <Loader2 className="h-4 w-4 text-white animate-spin" />
+                        <Loader2 className="h-6 w-6 text-white animate-spin" />
                     ) : (
-                        <Camera className="h-4 w-4 text-white" />
+                        <Camera className="h-6 w-6 text-white" />
                     )}
                 </div>
 
