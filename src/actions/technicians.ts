@@ -32,6 +32,24 @@ export async function createTechnician(fd: FormData) {
     }
 
     try {
+        // Handle "Zombie" PINs: If an inactive tech exists with this PIN, rename its PIN to free it up.
+        // This handles cases where a tech was deleted BEFORE our fix was implemented.
+        const zombieTech = await prisma.technician.findFirst({
+            where: {
+                userId: session.user.id,
+                pin: pin,
+                isActive: false // Only target deleted ones
+            }
+        })
+
+        if (zombieTech) {
+            await prisma.technician.update({
+                where: { id: zombieTech.id },
+                data: { pin: `${zombieTech.pin}_OLD_${Date.now()}`.slice(0, 30) }
+            })
+        }
+
+        // Now create the new one
         await prisma.technician.create({
             data: {
                 userId: session.user.id,
@@ -51,9 +69,17 @@ export async function deleteTechnician(id: string) {
     const session = await auth()
     if (!session?.user?.id) return { error: "No autorizado" }
 
+    // 1. Get current tech to append to PIN (avoiding collision even on deletes)
+    const tech = await prisma.technician.findUnique({ where: { id } })
+    if (!tech) return { error: "Técnico no encontrado" }
+
+    // 2. Soft delete + Rename PIN to free it up
     await prisma.technician.update({
         where: { id },
-        data: { isActive: false }
+        data: {
+            isActive: false,
+            pin: `${tech.pin}_DEL_${Date.now()}`.slice(0, 30) // Ensure it fits if there's a limit, though PIN is likely short
+        }
     })
     revalidatePath('/dashboard/technicians')
     return { success: true }

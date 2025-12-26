@@ -145,7 +145,7 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                     onClick={() => setShowHistory(!showHistory)}
                                 >
                                     <History className="h-4 w-4" />
-                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial de Visitas'}
+                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial (v0.2.0)'}
                                     {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 </Button>
                             )}
@@ -155,15 +155,15 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                 <div className="pt-4 border-t mt-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
                                     <h4 className="font-semibold text-sm text-muted-foreground mb-2">Historial Reciente</h4>
                                     {history.map((visit) => (
-                                        <div key={visit.id} className="flex gap-4 p-3 bg-slate-50 rounded-lg border">
-                                            <div className="h-8 w-8 rounded-full bg-white border flex-shrink-0 overflow-hidden">
+                                        <div key={visit.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border">
+                                            <div className="h-12 w-12 rounded-full bg-white border flex-shrink-0 overflow-hidden">
                                                 {visit.technicianAvatar ? (
-                                                    <Image src={visit.technicianAvatar} alt={visit.technicianName} width={32} height={32} className="w-full h-full object-cover" />
+                                                    <Image src={visit.technicianAvatar} alt={visit.technicianName} width={48} height={48} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <User className="h-4 w-4 text-gray-400 m-auto" />
+                                                    <User className="h-6 w-6 text-gray-400 m-auto" />
                                                 )}
                                             </div>
-                                            <div className="space-y-1 flex-1">
+                                            <div className="space-y-1 flex-1 flex flex-col justify-center">
                                                 <div className="flex justify-between items-start">
                                                     <p className="font-medium text-sm">{visit.technicianName}</p>
                                                     <span className="text-xs text-muted-foreground">
