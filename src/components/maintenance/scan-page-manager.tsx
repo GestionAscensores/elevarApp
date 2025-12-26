@@ -17,6 +17,7 @@ interface ScanPageManagerProps {
         status: string
         lastVisit: any
         companyLogo?: string | null
+        history?: any[]
     }
 }
 
@@ -71,6 +72,7 @@ export function ScanPageManager({ clientId, equipmentId, initialData }: ScanPage
                 status={initialData.status}
                 lastVisit={initialData.lastVisit}
                 companyLogo={initialData.companyLogo}
+                history={initialData.history}
             />
 
             <TechLoginModal
