@@ -16,7 +16,8 @@ import {
     FileStack, // Budgets
     Archive, // Archived
     Receipt, // Receipts
-    FileDiff // Credit Note
+    FileDiff, // Credit Note
+    Barcode // Inventory Scan
     // Activity
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -61,7 +62,14 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
         },
         // Change "Clientes" to "Edificios" with Building Icon
         { href: '/dashboard/clients', label: 'Edificios', icon: Building },
-        { href: '/dashboard/pricing', label: 'Inventario', icon: CreditCard },
+        {
+            label: 'Inventario',
+            icon: CreditCard,
+            children: [
+                { href: '/dashboard/pricing', label: 'Lista de Precios', icon: FileText },
+                { href: '/dashboard/inventory/scan', label: 'Escanear Stock', icon: Barcode },
+            ]
+        },
         { href: '/dashboard/config', label: 'Configuración', icon: Settings },
     ]
 
