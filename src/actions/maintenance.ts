@@ -66,7 +66,7 @@ export async function getEquipmentStatus(equipmentId: string) {
             },
             visits: {
                 orderBy: { date: 'desc' },
-                take: 1,
+                take: 5, // Fetch last 5 visits for history
                 include: {
                     technician: {
                         select: {
@@ -118,7 +118,15 @@ export async function getEquipmentStatus(equipmentId: string) {
             publicNotes: lastVisit.publicNotes,
             locationLat: lastVisit.locationLat,
             locationLng: lastVisit.locationLng
-        } : null
+        } : null,
+        history: equipment.visits.map(v => ({
+            id: v.id,
+            date: v.date,
+            technicianName: v.technician.name,
+            technicianAvatar: v.technician.avatarUrl,
+            publicNotes: v.publicNotes,
+            status: v.status
+        }))
     }
 }
 
