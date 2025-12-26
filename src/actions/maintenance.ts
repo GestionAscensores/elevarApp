@@ -130,8 +130,8 @@ export async function registerVisit(data: {
         }
 
         return { success: true }
-    } catch (e) {
-        console.error(e)
-        return { error: "Error al registrar visita." }
+    } catch (e: any) {
+        console.error("REGISTER VISIT ERROR:", e)
+        return { error: `Error: ${e.message || "Error desconocido al registrar"}` }
     }
 }
