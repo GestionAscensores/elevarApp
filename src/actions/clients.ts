@@ -133,15 +133,29 @@ export async function deleteClient(id: string) {
     if (!session) return { message: 'No autorizado' }
 
     try {
-        await db.client.delete({
-            where: {
-                id,
-                userId: session.userId
-            }
+        await db.$transaction(async (tx) => {
+            // Delete dependencies manually to avoid FK errors if DB cascade is missing
+            const where = { clientId: id }
+            await tx.receipt.deleteMany({ where })
+            await tx.invoiceItem.deleteMany({ where: { invoice: { clientId: id } } }) // Delete invoice items first
+            await tx.invoice.deleteMany({ where: { clientId: id } }) // Then invoices
+            await tx.maintenanceVisit.deleteMany({ where })
+            await tx.maintenanceTask.deleteMany({ where })
+            await tx.equipment.deleteMany({ where })
+            await tx.clientEquipment.deleteMany({ where })
+            await tx.priceHistory.deleteMany({ where })
+
+            await tx.client.delete({
+                where: {
+                    id,
+                    userId: session.userId
+                }
+            })
         })
         revalidatePath('/dashboard/clients')
         return { success: true }
     } catch (error) {
+        console.error("Error deleting client:", error)
         return { message: 'Error al eliminar cliente' }
     }
 }
@@ -152,19 +166,40 @@ export async function deleteClients(ids: string[]) {
 
     try {
         await db.$transaction(async (tx) => {
-            // 1. Delete associated invoices first to satisfy FK constraints
-            await tx.invoice.deleteMany({
+            const where = { clientId: { in: ids } }
+            const userId = session.userId
+
+            // 1. Delete Receipts
+            await tx.receipt.deleteMany({
                 where: {
                     clientId: { in: ids },
-                    userId: session.userId
+                    userId
                 }
             })
 
-            // 2. Delete clients
+            // 2. Delete Invoices (and items via cascade or manual if strictly needed, but normally items cascade from invoice)
+            // Ideally we delete invoice items if needed, but usually invoice->items is set to cascade.
+            // But Invoice->Client wasn't.
+            // Let's safe delete invoices.
+            await tx.invoice.deleteMany({
+                where: {
+                    clientId: { in: ids },
+                    userId
+                }
+            })
+
+            // 3. Other dependencies
+            await tx.maintenanceVisit.deleteMany({ where })
+            await tx.maintenanceTask.deleteMany({ where })
+            await tx.equipment.deleteMany({ where })
+            await tx.clientEquipment.deleteMany({ where })
+            await tx.priceHistory.deleteMany({ where })
+
+            // 4. Delete clients
             await tx.client.deleteMany({
                 where: {
                     id: { in: ids },
-                    userId: session.userId
+                    userId
                 }
             })
         })
