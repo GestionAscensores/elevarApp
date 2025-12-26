@@ -20,6 +20,7 @@ import { AutoBillingNotifier } from "@/components/dashboard/auto-billing-notifie
 import { PendingDraftsAlert } from "@/components/dashboard/pending-drafts-alert"
 import { PriceAlertsWidget } from "@/components/dashboard/price-alerts-widget"
 import { PendingTasksWidget } from "@/components/dashboard/pending-tasks-widget"
+import { InflationWidget } from "@/components/dashboard/inflation-widget"
 
 export default async function DashboardPage() {
     const session = await verifySession()
@@ -91,11 +92,15 @@ export default async function DashboardPage() {
                     <TrialGauge trialEndsAt={subscriptionData.trialEndsAt} />
                 )}
 
-                {/* Pending Tasks Widget (Takes remaining space or dedicated if gauge is hidden) */}
+                {/* Pending Tasks Widget (3 cols) */}
                 <PendingTasksWidget tasks={pendingTasks} />
 
-                {/* Monotributo Card */}
-                <div className={subscriptionData?.subscriptionStatus === 'trial' ? "col-span-full lg:col-span-4 md:col-span-2 block" : "col-span-full lg:col-span-4 block"}>
+                {/* Financial Column (4 cols) - Stacks Inflation & Monotributo */}
+                <div className="col-span-full lg:col-span-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <InflationWidget />
+                        {/* Placeholder for another mini-widget or just Inflation taking half */}
+                    </div>
                     <MonotributoCard />
                 </div>
             </div>
