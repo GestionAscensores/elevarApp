@@ -45,7 +45,12 @@ interface DashboardShellProps {
     } | null
 }
 
+import { MobileBottomNav } from './mobile-bottom-nav'
+import { useState } from 'react'
+
 export function DashboardShell({ children, user }: DashboardShellProps) {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
     // Nav Items definition
     const navItems = [
         { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
@@ -152,9 +157,9 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                     </div>
                 </div>
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col pb-16 md:pb-0">
                 <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-                    <Sheet>
+                    <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                         <SheetTrigger asChild>
                             <Button
                                 variant="outline"
@@ -185,6 +190,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                                                     <Link
                                                         key={sub.href}
                                                         href={sub.href}
+                                                        onClick={() => setIsMobileMenuOpen(false)}
                                                         className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
                                                     >
                                                         {sub.icon && <sub.icon className="h-4 w-4" />}
@@ -197,6 +203,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                                         <Link
                                             key={item.href}
                                             href={item.href}
+                                            onClick={() => setIsMobileMenuOpen(false)}
                                             className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
                                         >
                                             <item.icon className="h-5 w-5" />
@@ -224,6 +231,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                 <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
                     {children}
                 </main>
+                <MobileBottomNav onMenuClick={() => setIsMobileMenuOpen(true)} />
             </div>
         </div>
     )
