@@ -145,13 +145,16 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                     onClick={() => setShowHistory(!showHistory)}
                                 >
                                     <History className="h-4 w-4" />
-                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial de Visitas'}
+                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial de Visitas (Click aquí)'}
                                     {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 </Button>
                             )}
                         </CardContent>
                     </Card>
                 )}
+
+                {/* Debug Marker (remove later) */}
+                {/* <div className="text-xs text-gray-300 text-center">v0.1.9 - Cached: {new Date().toISOString()}</div> */}
 
                 {/* 4. History (Past 5 Visits) - Collapsible */}
                 {history && history.length > 0 && showHistory && (
