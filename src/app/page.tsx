@@ -34,14 +34,14 @@ export default function LandingPage() {
           <div className="container flex flex-col items-center text-center max-w-5xl mx-auto px-4 relative z-10">
             <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium transition-colors border-primary/20 bg-primary/10 text-primary mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Sparkles className="mr-2 h-4 w-4" />
-              Nuevo: Salud Fiscal para Monotributistas 📊
+              Nuevo: App Móvil para Escanear Repuestos 📸
             </div>
             <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl md:text-7xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 leading-tight">
-              Tu Empresa de Ascensores,<br />
-              <span className="text-primary">Administrada en Piloto Automático.</span>
+              Abonos, Repuestos y Stock.<br />
+              <span className="text-primary">Todo en una sola App.</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-              Desde la facturación masiva de abonos hasta el control de categorías de AFIP. Todo lo que necesitás para dejar de perder tiempo en papeles y empezar a crecer.
+              La plataforma definitiva para empresas de ascensores. Facturación masiva de abonos, control de repuestos con fotos y alertas de Monotributo.
             </p>
             <div className="flex flex-col sm:flex-row gap-5 w-full justify-center">
               <Link href="/register">
@@ -79,22 +79,22 @@ export default function LandingPage() {
               <FeatureCard
                 icon={<Zap className="h-8 w-8 text-orange-500" />}
                 title="Facturación Recurrente"
-                description="Programá tus abonos y olvidate. El sistema genera los borradores mensuales automáticamente (mes vencido o en curso)."
+                description="Programá tus abonos mensuales. El sistema genera los borradores (mes vencido o en curso) y factura masivamente."
               />
               <FeatureCard
-                icon={<BarChart3 className="h-8 w-8 text-blue-500" />}
+                icon={<Building2 className="h-8 w-8 text-blue-500" />}
+                title="Gestión de Repuestos"
+                description="Control de stock con fotos reales. Subí imágenes desde tu celular, escaneá códigos QR y gestioná precios en segundos."
+              />
+              <FeatureCard
+                icon={<BarChart3 className="h-8 w-8 text-red-500" />}
                 title="Salud de Monotributo"
-                description="Semáforo fiscal en tiempo real. Controlá tu facturación de los últimos 12 meses y recibí alertas antes de exceder tu categoría."
+                description="Semáforo fiscal en tiempo real. Controlá tu facturación de los últimos 12 meses y evitá pasarte de categoría."
               />
               <FeatureCard
                 icon={<Edit className="h-8 w-8 text-green-500" />}
-                title="Gestión Rápida"
-                description="Edición 'Inline' de Clientes y Precios. Modificá direcciones, montos de abono y nombres sin entrar en formularios lentos."
-              />
-              <FeatureCard
-                icon={<Users className="h-8 w-8 text-purple-500" />}
-                title="Base Unificada"
-                description="Administraciones, Consorcios y Particulares en un solo lugar. Importación masiva desde Excel para empezar en minutos."
+                title="App de Técnicos"
+                description="Escaner de productos integrado. Tus técnicos pueden buscar repuestos, ver fotos y actualizar stock desde el ascensor."
               />
               <FeatureCard
                 icon={<ShieldCheck className="h-8 w-8 text-indigo-500" />}
@@ -103,8 +103,8 @@ export default function LandingPage() {
               />
               <FeatureCard
                 icon={<Mail className="h-8 w-8 text-pink-500" />}
-                title="Envío Automático"
-                description="Enviá los comprobantes por email a tus clientes con un solo clic y verificá quiénes los recibieron."
+                title="Base Unificada"
+                description="Administrá Consorcios, Particulares y Repuestos en un solo lugar. Importación masiva desde Excel."
               />
             </div>
           </div>
