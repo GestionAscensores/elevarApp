@@ -2,6 +2,8 @@ import { getPublicStatus } from '@/actions/maintenance'
 import { ScanPageManager } from '@/components/maintenance/scan-page-manager'
 import { notFound } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ScanPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const statusData = await getPublicStatus(id)
