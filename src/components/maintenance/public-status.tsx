@@ -142,10 +142,13 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                 <Button
                                     variant="outline"
                                     className="w-full mt-4 flex items-center justify-center gap-2"
-                                    onClick={() => setShowHistory(!showHistory)}
+                                    onClick={() => {
+                                        console.log('Toggling history', !showHistory);
+                                        setShowHistory(!showHistory)
+                                    }}
                                 >
                                     <History className="h-4 w-4" />
-                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial (v0.2.0)'}
+                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial (v0.2.2)'}
                                     {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 </Button>
                             )}
@@ -156,11 +159,11 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                     <h4 className="font-semibold text-sm text-muted-foreground mb-2">Historial Reciente</h4>
                                     {history.map((visit) => (
                                         <div key={visit.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border">
-                                            <div className="h-12 w-12 rounded-full bg-white border flex-shrink-0 overflow-hidden">
+                                            <div className="h-16 w-16 rounded-full bg-white border flex-shrink-0 overflow-hidden">
                                                 {visit.technicianAvatar ? (
-                                                    <Image src={visit.technicianAvatar} alt={visit.technicianName} width={48} height={48} className="w-full h-full object-cover" />
+                                                    <Image src={visit.technicianAvatar} alt={visit.technicianName} width={64} height={64} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <User className="h-6 w-6 text-gray-400 m-auto" />
+                                                    <User className="h-8 w-8 text-gray-400 m-auto" />
                                                 )}
                                             </div>
                                             <div className="space-y-1 flex-1 flex flex-col justify-center">

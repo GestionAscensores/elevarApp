@@ -31,6 +31,8 @@ export async function createTechnician(fd: FormData) {
         return { error: "Datos inválidos. El PIN debe tener 4 dígitos." }
     }
 
+    // console.log(`[CreateTechnician] Attempting to create: ${name} with PIN ${pin}`)
+
     try {
         // Handle "Zombie" PINs: If an inactive tech exists with this PIN, rename its PIN to free it up.
         // This handles cases where a tech was deleted BEFORE our fix was implemented.
@@ -43,6 +45,7 @@ export async function createTechnician(fd: FormData) {
         })
 
         if (zombieTech) {
+            // console.log(`[CreateTechnician] Found zombie tech ${zombieTech.name} (${zombieTech.id}). Renaming PIN...`)
             await prisma.technician.update({
                 where: { id: zombieTech.id },
                 data: { pin: `${zombieTech.pin}_OLD_${Date.now()}`.slice(0, 30) }
