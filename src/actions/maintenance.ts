@@ -130,8 +130,11 @@ export async function registerVisit(data: {
         }
 
         return { success: true }
+    } catch (e: any) {
+        console.error("REGISTER VISIT ERROR:", e)
         return { error: `Error: ${e.message || "Error desconocido al registrar"}` }
     }
+}
 }
 
 export async function getEquipmentVisits(equipmentId: string) {
