@@ -51,6 +51,7 @@ export async function getEquipmentStatus(equipmentId: string) {
         include: {
             client: {
                 select: {
+                    id: true, // Need this for FK
                     name: true,
                     address: true,
                     userId: true
@@ -81,6 +82,7 @@ export async function getEquipmentStatus(equipmentId: string) {
         clientName: equipment.client.name,
         clientAddress: equipment.client.address,
         companyId: equipment.client.userId,
+        clientId: equipment.client.id, // Return correct Client ID for VisitForm
         status: lastVisit ? lastVisit.status : 'Sin Datos',
         lastVisit: lastVisit ? {
             date: lastVisit.date,

@@ -23,7 +23,7 @@ export default async function EquipmentScanPage({ params }: { params: Promise<{ 
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pb-10">
             <ScanPageManager
-                clientId={statusData.companyId} // Actually companyId/userId, nomenclature mismatch in ScanPageManager type but logic is correct (companyId used for tech login)
+                clientId={statusData.clientId} // Fix: Use Client ID, not Company ID (userId)
                 equipmentId={id}
                 initialData={adaptedData}
             />
