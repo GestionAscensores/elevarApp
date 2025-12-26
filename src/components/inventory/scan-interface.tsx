@@ -117,6 +117,7 @@ export function ScanInterface() {
     const [createLoading, setCreateLoading] = useState(false)
     const [newName, setNewName] = useState('')
     const [newPrice, setNewPrice] = useState('')
+    const [newImageBase64, setNewImageBase64] = useState<string | null>(null) // New image state
 
     const handleCreateProduct = async () => {
         if (!scannedCode || !newName || !newPrice) return
@@ -129,21 +130,30 @@ export function ScanInterface() {
             stock: 0 // Start with 0, user can add immediately
         })
 
-        setCreateLoading(false)
+        if (result.success && result.product) {
+            // Upload image if selected
+            if (newImageBase64) {
+                await updateProductImage(result.product.id, newImageBase64)
+                result.product.imageUrl = newImageBase64
+            }
 
-        if (result.success) {
+            setCreateLoading(false)
             toast.success("Producto creado")
             setProduct(result.product)
+
             // Clear form
             setNewName('')
             setNewPrice('')
+            setNewImageBase64(null)
         } else {
+            setCreateLoading(false)
             toast.error(result.error)
         }
     }
 
     const [imageLoading, setImageLoading] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const newFileInputRef = useRef<HTMLInputElement>(null) // Ref for new product image
     const [manualCode, setManualCode] = useState('')
 
     const handleManualSearch = () => {
@@ -153,11 +163,8 @@ export function ScanInterface() {
         }
     }
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file || !product) return
-
-        setImageLoading(true)
+    // Generic Image Handler (reuses resizing logic)
+    const processImage = (file: File, callback: (base64: string) => void) => {
         const reader = new FileReader()
         reader.onload = (event) => {
             const img = new Image()
@@ -185,13 +192,31 @@ export function ScanInterface() {
                 const ctx = canvas.getContext('2d')
                 ctx?.drawImage(img, 0, 0, width, height)
 
-                // Compress to JPEG 0.7
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
-                saveImage(dataUrl)
+                callback(dataUrl)
             }
             img.src = event.target?.result as string
         }
         reader.readAsDataURL(file)
+    }
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !product) return
+
+        setImageLoading(true)
+        processImage(file, (base64) => {
+            saveImage(base64)
+        })
+    }
+
+    const handleNewImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        processImage(file, (base64) => {
+            setNewImageBase64(base64)
+        })
     }
 
     const saveImage = async (base64: string) => {
@@ -253,6 +278,31 @@ export function ScanInterface() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 p-4">
+                        {/* New Image Preview/Upload */}
+                        <div className="flex justify-center mb-4">
+                            <div
+                                className="relative h-32 w-32 bg-white rounded-xl border-2 border-dashed border-orange-300 flex items-center justify-center cursor-pointer overflow-hidden"
+                                onClick={() => newFileInputRef.current?.click()}
+                            >
+                                {newImageBase64 ? (
+                                    <img src={newImageBase64} alt="Preview" className="h-full w-full object-cover" />
+                                ) : (
+                                    <div className="flex flex-col items-center text-orange-400">
+                                        <Camera className="h-10 w-10 mb-1" />
+                                        <span className="text-xs font-bold">AGREGAR FOTO</span>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    ref={newFileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    capture="environment"
+                                    onChange={handleNewImageSelect}
+                                />
+                            </div>
+                        </div>
+
                         <div className="space-y-2">
                             <Label htmlFor="name" className="text-base">Nombre del Producto</Label>
                             <Input
@@ -293,23 +343,23 @@ export function ScanInterface() {
 
             {product && (
                 <Card className="border-green-200 overflow-hidden">
-                    <div className="relative h-48 bg-slate-100 flex items-center justify-center">
+                    <div className="relative h-64 bg-slate-100 flex items-center justify-center"> {/* Increased Height */}
                         {product.imageUrl ? (
                             <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
                             <div className="text-slate-400 flex flex-col items-center">
-                                <Camera className="h-12 w-12 mb-2 opacity-50" />
-                                <span className="text-sm">Sin imagen</span>
+                                <Camera className="h-16 w-16 mb-2 opacity-30" />
+                                <span className="text-base font-medium">Sin imagen</span>
                             </div>
                         )}
 
                         <Button
                             size="icon"
-                            className="absolute bottom-4 right-4 rounded-full shadow-lg"
+                            className="absolute bottom-4 right-4 h-16 w-16 rounded-full shadow-xl bg-slate-900 hover:bg-slate-800"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={imageLoading}
                         >
-                            {imageLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                            {imageLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : <Camera className="h-8 w-8" />}
                         </Button>
                         <input
                             type="file"
