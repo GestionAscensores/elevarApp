@@ -14,6 +14,7 @@ import { Loader2 } from "lucide-react"
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { ProductImageCell } from './product-image-cell'
 
 function SubmitButton() {
     const { pending } = useFormStatus()
@@ -52,6 +53,13 @@ export function EditProductForm({ product }: Props) {
             <CardContent>
                 <form action={action} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2 md:col-span-2">
+                            <Label>Imagen del Producto</Label>
+                            <div className="flex justify-start">
+                                <ProductImageCell id={product.id} initialImageUrl={product.imageUrl} name={product.name} />
+                            </div>
+                        </div>
+
                         <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="name">Nombre</Label>
                             <Input id="name" name="name" defaultValue={product.name} required />

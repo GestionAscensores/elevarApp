@@ -6,8 +6,10 @@ const nextConfig = {
     },
 
     experimental: {
-        // serverActions is true by default in Next 14, but strict checking might require this
-    }
+        serverActions: {
+            bodySizeLimit: '5mb',
+        },
+    },
 };
 
 export default nextConfig;
