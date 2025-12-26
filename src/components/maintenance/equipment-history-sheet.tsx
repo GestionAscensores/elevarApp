@@ -178,8 +178,25 @@ export function EquipmentHistorySheet({ equipmentId, equipmentName, clientName }
 
                                     {/* Photo Proof Display */}
                                     {visit.proofUrl && (
-                                        <div className="mt-2">
-                                            <img src={visit.proofUrl} alt="Comprobante" className="rounded-md border h-16 w-auto object-cover cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open(visit.proofUrl, '_blank')} />
+                                        <div className="mt-2 group/image relative w-fit">
+                                            <img
+                                                src={visit.proofUrl}
+                                                alt="Comprobante"
+                                                className="rounded-md border h-16 w-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                onClick={() => {
+                                                    const link = document.createElement('a');
+                                                    link.href = visit.proofUrl;
+                                                    link.download = `Comprobante_${new Date(visit.date).toISOString().split('T')[0]}.jpg`;
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                }}
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 pointer-events-none">
+                                                <div className="bg-black/50 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
+                                                    Descargar
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
 
