@@ -43,16 +43,15 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
     return (
         <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center">
 
-            {/* 1. Header Logo (Full Width / Max 200px equivalent constraint if needed, but requested full width) */}
             {/* 1. Header Logo (Full Width) */}
             {companyLogo ? (
                 <div className="w-full bg-white shadow-sm mb-4">
-                    <div className="w-full h-32 relative">
-                        {/* Removed max-w-md to allow full width banner effect as requested */}
+                    <div className="w-full h-44 relative">
+                        {/* Increased height to h-44 and removed padding to maximize width usage */}
                         <img
                             src={companyLogo}
                             alt="Company Logo"
-                            className="w-full h-full object-contain p-2"
+                            className="w-full h-full object-contain"
                         />
                     </div>
                 </div>
@@ -95,16 +94,16 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                         <CardContent className="pt-6 space-y-6">
                             {/* Technician Info */}
                             <div className="flex items-center gap-4">
-                                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
+                                <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
                                     {lastVisit.technicianAvatar ? (
-                                        <Image src={lastVisit.technicianAvatar} alt={lastVisit.technicianName} width={64} height={64} className="w-full h-full object-cover" />
+                                        <Image src={lastVisit.technicianAvatar} alt={lastVisit.technicianName} width={96} height={96} className="w-full h-full object-cover" />
                                     ) : (
-                                        <User className="h-8 w-8 text-primary" />
+                                        <User className="h-12 w-12 text-primary" />
                                     )}
                                 </div>
                                 <div>
                                     <p className="text-sm text-muted-foreground">Técnico a cargo</p>
-                                    <p className="font-bold text-lg">{lastVisit.technicianName}</p>
+                                    <p className="font-bold text-2xl">{lastVisit.technicianName}</p>
                                 </div>
                             </div>
 
@@ -115,39 +114,18 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                 </div>
                             )}
 
-                            {/* Map proof */}
-                            {mapUrl && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                        <MapPin className="h-4 w-4" />
-                                        Ubicación del reporte
-                                    </div>
-                                    <div className="rounded-xl overflow-hidden border shadow-sm aspect-video relative bg-slate-100">
-                                        <iframe
-                                            src={mapUrl}
-                                            width="100%"
-                                            height="100%"
-                                            style={{ border: 0 }}
-                                            allowFullScreen
-                                            loading="lazy"
-                                            referrerPolicy="no-referrer-when-downgrade"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
                             {/* History Toggle Button */}
                             {history && history.length > 0 && (
                                 <Button
                                     variant="outline"
-                                    className="w-full mt-4 flex items-center justify-center gap-2"
+                                    className="w-full mt-2 flex items-center justify-center gap-2"
                                     onClick={() => {
                                         console.log('Toggling history', !showHistory);
                                         setShowHistory(!showHistory)
                                     }}
                                 >
                                     <History className="h-4 w-4" />
-                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial (v0.2.3)'}
+                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial (v0.2.5)'}
                                     {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 </Button>
                             )}
@@ -178,6 +156,27 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            )}
+
+                            {/* Map proof */}
+                            {mapUrl && (
+                                <div className="space-y-2 pt-4 border-t">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                        <MapPin className="h-4 w-4" />
+                                        Ubicación del reporte
+                                    </div>
+                                    <div className="rounded-xl overflow-hidden border shadow-sm aspect-video relative bg-slate-100">
+                                        <iframe
+                                            src={mapUrl}
+                                            width="100%"
+                                            height="100%"
+                                            style={{ border: 0 }}
+                                            allowFullScreen
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                        />
+                                    </div>
                                 </div>
                             )}
                         </CardContent>
