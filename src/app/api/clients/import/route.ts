@@ -143,50 +143,50 @@ export async function POST(req: Request) {
                                     qrCode: eq.qrCode || Math.random().toString(36).substring(7),
                                     description: eq.description,
                                     installDate: eq.installDate ? new Date(eq.installDate) : null
-                                } as any)
-                        })
+                                } as any
+                            })
 
-            // Restore Visits if present
-            if (eq.visits && eq.visits.length > 0) {
-                await tx.maintenanceVisit.createMany({
-                    data: eq.visits.map((v: any) => ({
-                        clientId: client.id, // Visits link to client too
-                        equipmentId: newEq.id,
-                        date: new Date(v.date),
-                        type: v.type,
-                        status: v.status,
-                        publicNotes: v.publicNotes,
-                        privateNotes: v.privateNotes,
-                        proofUrl: v.proofUrl,
-                        technicianId: v.technicianId // Be careful with foreign keys! Technician might not exist in new DB.
-                        // If technicianId is from another DB, this will fail. 
-                        // We should probably set technicianId to NULL or find a default.
-                        // SAFEGUAD: We cannot import technicianId blindly.
-                        // FIXME: For this task, I will omit technicianId restoration to prevent FK errors, or fallback.
-                    })).map(({ technicianId, ...rest }: any) => {
-                        // Hack: we need a technicianId.
-                        // Ideally we look up by name. For now let's skip visits import if strict, 
-                        // OR we just create a "System" technician?
-                        // Let's SKIP creating visits to avoid FK crashes for now unless we are sure.
-                        // The user said "include history". 
-                        // I'll try to find a technician by name, else skip.
-                        return rest
-                    }).filter((v: any) => false) // DISABLE VISITS IMPORT TO PREVENT CRASH FOR NOW until we solve Technician mapping.
-                })
-            }
-        }
-    }
+                            // Restore Visits if present
+                            if (eq.visits && eq.visits.length > 0) {
+                                await tx.maintenanceVisit.createMany({
+                                    data: eq.visits.map((v: any) => ({
+                                        clientId: client.id, // Visits link to client too
+                                        equipmentId: newEq.id,
+                                        date: new Date(v.date),
+                                        type: v.type,
+                                        status: v.status,
+                                        publicNotes: v.publicNotes,
+                                        privateNotes: v.privateNotes,
+                                        proofUrl: v.proofUrl,
+                                        technicianId: v.technicianId // Be careful with foreign keys! Technician might not exist in new DB.
+                                        // If technicianId is from another DB, this will fail. 
+                                        // We should probably set technicianId to NULL or find a default.
+                                        // SAFEGUAD: We cannot import technicianId blindly.
+                                        // FIXME: For this task, I will omit technicianId restoration to prevent FK errors, or fallback.
+                                    })).map(({ technicianId, ...rest }: any) => {
+                                        // Hack: we need a technicianId.
+                                        // Ideally we look up by name. For now let's skip visits import if strict, 
+                                        // OR we just create a "System" technician?
+                                        // Let's SKIP creating visits to avoid FK crashes for now unless we are sure.
+                                        // The user said "include history". 
+                                        // I'll try to find a technician by name, else skip.
+                                        return rest
+                                    }).filter((v: any) => false) // DISABLE VISITS IMPORT TO PREVENT CRASH FOR NOW until we solve Technician mapping.
+                                })
+                            }
+                        }
+                    }
                 }
 
                 // Note: Skipping Invoice/Visit import details to ensure stability. 
                 // Exporting them gives the USER the data (Backup). Importing complex relational data via CSV is risky without ID mapping.
             })
-successCount++
+            successCount++
         }
 
-return NextResponse.json({ success: true, count: successCount })
+        return NextResponse.json({ success: true, count: successCount })
     } catch (e) {
-    console.error(e)
-    return new NextResponse('Error processing file', { status: 500 })
-}
+        console.error(e)
+        return new NextResponse('Error processing file', { status: 500 })
+    }
 }
