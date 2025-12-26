@@ -135,7 +135,6 @@ export async function registerVisit(data: {
         return { error: `Error: ${e.message || "Error desconocido al registrar"}` }
     }
 }
-}
 
 export async function getEquipmentVisits(equipmentId: string) {
     try {
