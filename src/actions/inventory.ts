@@ -78,3 +78,32 @@ export async function setProductBarcode(id: string, barcode: string) {
         return { error: 'Error al asignar código de barras' }
     }
 }
+
+export async function createInventoryProduct(data: {
+    barcode: string
+    name: string
+    price: number
+    stock: number
+}) {
+    const session = await verifySession()
+    if (!session) return { error: 'No autorizado' }
+
+    try {
+        const product = await db.product.create({
+            data: {
+                userId: session.userId,
+                name: data.name,
+                price: data.price,
+                stock: data.stock,
+                barcode: data.barcode,
+                currency: 'ARS', // Default
+                ivaRate: '21',   // Default
+            }
+        })
+        revalidatePath('/dashboard/inventory/scan')
+        return { success: true, product }
+    } catch (error) {
+        console.error('Error creating product:', error)
+        return { error: 'Error al crear producto' }
+    }
+}

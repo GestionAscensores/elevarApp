@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode'
-import { getProductByBarcode, updateProductStock, setProductBarcode, updateProductImage } from '@/actions/inventory'
+import { getProductByBarcode, updateProductStock, setProductBarcode, updateProductImage, createInventoryProduct } from '@/actions/inventory'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from 'sonner'
 import { Loader2, Plus, Minus, RefreshCw, Barcode, Camera } from 'lucide-react'
 
@@ -105,10 +105,35 @@ export function ScanInterface() {
         }
     }
 
-    const resetScan = () => {
-        setScannedCode(null)
-        setProduct(null)
-        // Effect will re-init scanner
+
+
+    // Quick Create State
+    const [createLoading, setCreateLoading] = useState(false)
+    const [newName, setNewName] = useState('')
+    const [newPrice, setNewPrice] = useState('')
+
+    const handleCreateProduct = async () => {
+        if (!scannedCode || !newName || !newPrice) return
+        setCreateLoading(true)
+
+        const result = await createInventoryProduct({
+            barcode: scannedCode,
+            name: newName,
+            price: parseFloat(newPrice),
+            stock: 0 // Start with 0, user can add immediately
+        })
+
+        setCreateLoading(false)
+
+        if (result.success) {
+            toast.success("Producto creado")
+            setProduct(result.product)
+            // Clear form
+            setNewName('')
+            setNewPrice('')
+        } else {
+            toast.error(result.error)
+        }
     }
 
     const [imageLoading, setImageLoading] = useState(false)
@@ -186,20 +211,45 @@ export function ScanInterface() {
             {scannedCode && !product && (
                 <Card className="border-orange-200 bg-orange-50">
                     <CardHeader>
-                        <CardTitle className="text-orange-900">Código: {scannedCode}</CardTitle>
+                        <CardTitle className="text-orange-900">Nuevo Producto</CardTitle>
+                        <CardDescription>
+                            Código: <span className="font-mono font-bold">{scannedCode}</span>
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-orange-800 mb-4">No se encontró ningún producto con este código.</p>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Nombre del Producto</Label>
+                            <Input
+                                id="name"
+                                placeholder="Ej. Plaqueta Maniobra"
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                className="bg-white"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="price">Precio (ARS)</Label>
+                            <Input
+                                id="price"
+                                type="number"
+                                placeholder="0.00"
+                                value={newPrice}
+                                onChange={(e) => setNewPrice(e.target.value)}
+                                className="bg-white"
+                            />
+                        </div>
                         <Button
-                            className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-                            onClick={() => toast.info("Funcionalidad de crear producto próximamente")}
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white mt-2"
+                            onClick={handleCreateProduct}
+                            disabled={createLoading || !newName || !newPrice}
                         >
-                            <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Producto
+                            {createLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                            Crear Producto
                         </Button>
                     </CardContent>
                     <CardFooter>
-                        <Button variant="outline" className="w-full" onClick={resetScan}>
-                            <RefreshCw className="mr-2 h-4 w-4" /> Escanear otro
+                        <Button variant="outline" className="w-full border-orange-200 bg-white" onClick={resetScan}>
+                            <RefreshCw className="mr-2 h-4 w-4" /> Cancelar / Escanear otro
                         </Button>
                     </CardFooter>
                 </Card>
