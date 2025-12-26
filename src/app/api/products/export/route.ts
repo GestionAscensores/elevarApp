@@ -17,15 +17,19 @@ export async function GET() {
     })
 
     const csvRows = [
-        ['Codigo', 'Nombre', 'Descripcion', 'Precio'].join(',')
+        ['Codigo', 'Nombre', 'Descripcion', 'Precio', 'Stock', 'Codigo Barras', 'Imagen URL', 'Tasa IVA'].join(',')
     ]
 
-    for (const prod of products) {
+    for (const product of products) {
         csvRows.push([
-            `"${prod.code || ''}"`,
-            `"${prod.name}"`,
-            `"${prod.description || ''}"`,
-            `"${prod.price}"`
+            `"${product.code || ''}"`,
+            `"${product.name.replace(/"/g, '""')}"`,
+            `"${(product.description || '').replace(/"/g, '""')}"`,
+            `"${product.price}"`,
+            `"${product.stock}"`,
+            `"${product.barcode || ''}"`,
+            `"${product.imageUrl || ''}"`, // Export the image URL
+            `"${product.ivaRate || '21'}"`
         ].join(','))
     }
 
@@ -34,7 +38,7 @@ export async function GET() {
     return new NextResponse(csvContent, {
         headers: {
             'Content-Type': 'text/csv',
-            'Content-Disposition': `attachment; filename="productos-${new Date().toISOString().split('T')[0]}.csv"`
+            'Content-Disposition': `attachment; filename="repuestos-${new Date().toISOString().split('T')[0]}.csv"`
         }
     })
 }

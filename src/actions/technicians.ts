@@ -108,3 +108,81 @@ export async function validateTechnicianPin(userId: string, pin: string) {
         avatarUrl: tech.avatarUrl
     }
 }
+
+export async function updateTechnicianName(id: string, name: string) {
+    const session = await auth()
+    if (!session?.user?.id) return { success: false, message: "No autorizado" }
+
+    try {
+        await prisma.technician.update({
+            where: { id, userId: session.user.id },
+            data: { name }
+        })
+        revalidatePath('/dashboard/technicians')
+        return { success: true }
+    } catch (e) {
+        return { success: false, message: "Error al actualizar nombre" }
+    }
+}
+
+export async function updateTechnicianPin(id: string, pin: string) {
+    const session = await auth()
+    if (!session?.user?.id) return { success: false, message: "No autorizado" }
+
+    if (!pin || pin.length !== 4) return { success: false, message: "El PIN debe tener 4 dígitos" }
+
+    try {
+        // Check for PIN collision (active techs only)
+        const existing = await prisma.technician.findFirst({
+            where: {
+                userId: session.user.id,
+                pin,
+                isActive: true,
+                NOT: { id }
+            }
+        })
+
+        if (existing) return { success: false, message: "PIN ya está en uso" }
+
+        await prisma.technician.update({
+            where: { id, userId: session.user.id },
+            data: { pin }
+        })
+        revalidatePath('/dashboard/technicians')
+        return { success: true }
+    } catch (e) {
+        return { success: false, message: "Error al actualizar PIN" }
+    }
+}
+
+export async function updateTechnicianAvatar(id: string, base64: string) {
+    const session = await auth()
+    if (!session?.user?.id) return { success: false, message: "No autorizado" }
+
+    try {
+        await prisma.technician.update({
+            where: { id, userId: session.user.id },
+            data: { avatarUrl: base64 }
+        })
+        revalidatePath('/dashboard/technicians')
+        return { success: true }
+    } catch (e) {
+        return { success: false, message: "Error al actualizar foto" }
+    }
+}
+
+export async function deleteTechnicianAvatar(id: string) {
+    const session = await auth()
+    if (!session?.user?.id) return { success: false, message: "No autorizado" }
+
+    try {
+        await prisma.technician.update({
+            where: { id, userId: session.user.id },
+            data: { avatarUrl: null }
+        })
+        revalidatePath('/dashboard/technicians')
+        return { success: true }
+    } catch (e) {
+        return { success: false, message: "Error al eliminar foto" }
+    }
+}

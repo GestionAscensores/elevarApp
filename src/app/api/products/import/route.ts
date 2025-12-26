@@ -23,71 +23,84 @@ export async function POST(req: Request) {
         const lines = text.split(/\r?\n/)
 
         let successCount = 0
+        let errorCount = 0
 
         // Skip header row
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim()
             if (!line) continue
 
+            // Regex for CSV split handling quotes
             const row = line.match(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g)?.map(val => {
                 return val.replace(/^,/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim()
             })
 
-            if (!row || row.length < 4) continue // Need Code, Name, Description, Price
+            if (!row || row.length < 2) {
+                errorCount++
+                continue
+            }
 
-            const [code, name, description, priceStr, ivaRate] = row
+            const [code, name, description, price, stock, barcode, imageUrl, ivaRate] = row
 
-            if (!name || !priceStr) continue
+            if (!name) {
+                errorCount++
+                continue
+            }
 
-            const price = parseFloat(priceStr)
-            if (isNaN(price)) continue
+            // Identify product to update
+            // Strategy: 
+            // 1. Try Barcode (if provided)
+            // 2. Try Code (if provided)
+            // 3. Try Name (exact match)
 
-            // Create only (no easy unique key for upsert besides ID which we don't have, or Code)
-            // Assuming Code is unique per user if provided
+            let existing = null
 
-            if (code) {
-                const existing = await db.product.findFirst({
-                    where: { userId: session.userId, code }
+            if (barcode) {
+                existing = await db.product.findFirst({
+                    where: { userId: session.userId, barcode: barcode }
                 })
+            }
 
-                if (existing) {
-                    await db.product.update({
-                        where: { id: existing.id },
-                        data: {
-                            name,
-                            description: description || '',
-                            price,
-                            ivaRate: ivaRate || '21'
-                        }
-                    })
-                } else {
-                    await db.product.create({
-                        data: {
-                            userId: session.userId,
-                            code,
-                            name,
-                            description: description || '',
-                            price,
-                            ivaRate: ivaRate || '21'
-                        }
-                    })
-                }
+            if (!existing && code) {
+                existing = await db.product.findFirst({
+                    where: { userId: session.userId, code: code }
+                })
+            }
+
+            if (!existing) {
+                existing = await db.product.findFirst({
+                    where: { userId: session.userId, name: name }
+                })
+            }
+
+            const productData = {
+                code: code || null,
+                name: name,
+                description: description || '',
+                price: Number(price) || 0,
+                stock: Number(stock) || 0,
+                barcode: barcode || null,
+                imageUrl: imageUrl || null,
+                ivaRate: ivaRate || '21',
+                userId: session.userId
+            }
+
+            if (existing) {
+                // Update
+                await db.product.update({
+                    where: { id: existing.id },
+                    data: productData
+                })
             } else {
+                // Create
                 await db.product.create({
-                    data: {
-                        userId: session.userId,
-                        code: `P${Date.now()}${i}`, // Temp code if missing
-                        name,
-                        description: description || '',
-                        price,
-                        ivaRate: ivaRate || '21'
-                    }
+                    data: productData
                 })
             }
             successCount++
         }
 
-        return NextResponse.json({ success: true, count: successCount })
+        return NextResponse.json({ success: true, count: successCount, errors: errorCount })
     } catch (e) {
         console.error(e)
         return new NextResponse('Error processing file', { status: 500 })

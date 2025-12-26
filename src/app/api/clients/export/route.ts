@@ -13,17 +13,32 @@ export async function GET() {
 
     const clients = await db.client.findMany({
         where: { userId: session.userId },
-        include: { items: true },
+        include: {
+            items: true,
+            equipment: {
+                include: { visits: true }
+            },
+            invoices: {
+                orderBy: { date: 'desc' },
+                take: 100 // Limit to last 100 invoices per client to avoid CSV explosion
+            },
+            priceHistory: {
+                orderBy: { createdAt: 'desc' }
+            }
+        },
         orderBy: { name: 'asc' }
     })
 
     const csvRows = [
-        ['Nombre', 'Tipo Doc', 'Documento', 'Direccion', 'Email', 'Telefono', 'Condicion IVA', 'Equipos'].join(',')
+        ['Nombre', 'Tipo Doc', 'Documento', 'Direccion', 'Email', 'Telefono', 'Condicion IVA', 'Equipos (Billing)', 'Bitacora (JSON)', 'Facturas (JSON)', 'Historial Precios (JSON)'].join(',')
     ]
 
     for (const client of clients) {
         // Serialize items to JSON, escaping quotes for CSV
         const itemsJson = JSON.stringify(client.items || []).replace(/"/g, '""')
+        const equipmentJson = JSON.stringify(client.equipment || []).replace(/"/g, '""')
+        const invoicesJson = JSON.stringify(client.invoices || []).replace(/"/g, '""')
+        const pricesJson = JSON.stringify(client.priceHistory || []).replace(/"/g, '""')
 
         csvRows.push([
             `"${client.name}"`,
@@ -33,7 +48,10 @@ export async function GET() {
             `"${client.email || ''}"`,
             `"${client.phone || ''}"`,
             `"${client.ivaCondition || 'Consumidor Final'}"`,
-            `"${itemsJson}"`
+            `"${itemsJson}"`,
+            `"${equipmentJson}"`,
+            `"${invoicesJson}"`,
+            `"${pricesJson}"`
         ].join(','))
     }
 

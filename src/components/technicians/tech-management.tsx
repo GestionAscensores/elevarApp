@@ -10,6 +10,9 @@ import { createTechnician, deleteTechnician } from '@/actions/technicians'
 import { Plus, User, Trash2, Key } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { InlineTechName } from './inline-tech-name'
+import { InlineTechPin } from './inline-tech-pin'
+import { InlineTechAvatar } from './inline-tech-avatar'
 
 interface Technician {
     id: string
@@ -163,19 +166,10 @@ export function TechManagement({ initialTechnicians }: { initialTechnicians: Tec
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-4 mb-2">
-                                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border">
-                                    {tech.avatarUrl ? (
-                                        <img src={tech.avatarUrl} alt={tech.name} className="h-full w-full object-cover" />
-                                    ) : (
-                                        <User className="h-5 w-5 text-gray-400" />
-                                    )}
-                                </div>
-                                <div className="text-xl font-bold">{tech.name}</div>
+                                <InlineTechAvatar id={tech.id} initialImageUrl={tech.avatarUrl} name={tech.name} />
+                                <InlineTechName id={tech.id} initialName={tech.name} />
                             </div>
-                            <div className="flex items-center mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded-md font-mono">
-                                <Key className="mr-2 h-3 w-3" />
-                                PIN: {tech.pin}
-                            </div>
+                            <InlineTechPin id={tech.id} initialPin={tech.pin} />
                         </CardContent>
                         <CardFooter className="justify-end pt-0">
                             <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(tech.id)}>
