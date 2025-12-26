@@ -145,7 +145,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                             ))}
                         </nav>
                     </div>
-                    <div className="mt-auto p-4">
+                    <div className="p-4 mt-auto border-t border-white/10">
                         <Button
                             variant="ghost"
                             className="w-full justify-start gap-2 text-red-300 hover:text-red-100 hover:bg-red-900/20"
@@ -157,7 +157,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                     </div>
                 </div>
             </div>
-            <div className="flex flex-col pb-16 md:pb-0">
+            <div className="flex flex-col h-screen overflow-hidden pb-16 md:pb-0">
                 <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
                     <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                         <SheetTrigger asChild>
@@ -233,7 +233,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                 </main>
                 <MobileBottomNav onMenuClick={() => setIsMobileMenuOpen(true)} />
             </div>
-        </div>
+        </div >
     )
 }
 
