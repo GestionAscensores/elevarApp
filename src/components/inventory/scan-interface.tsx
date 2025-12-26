@@ -227,7 +227,7 @@ export function ScanInterface() {
                     <CardHeader>
                         <CardTitle className="text-sm font-medium text-center">Ingreso Manual</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex gap-2">
+                    <CardContent className="flex gap-2 p-4">
                         <Input
                             placeholder="Escribe el código..."
                             value={manualCode}
@@ -235,9 +235,10 @@ export function ScanInterface() {
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleManualSearch()
                             }}
+                            className="h-14 text-lg bg-white border-slate-300"
                         />
-                        <Button onClick={handleManualSearch} disabled={!manualCode}>
-                            <Search className="h-4 w-4" />
+                        <Button onClick={handleManualSearch} disabled={!manualCode} className="h-14 w-14 shrink-0">
+                            <Search className="h-6 w-6" />
                         </Button>
                     </CardContent>
                 </Card>
@@ -251,34 +252,34 @@ export function ScanInterface() {
                             Código: <span className="font-mono font-bold">{scannedCode}</span>
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 p-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">Nombre del Producto</Label>
+                            <Label htmlFor="name" className="text-base">Nombre del Producto</Label>
                             <Input
                                 id="name"
                                 placeholder="Ej. Plaqueta Maniobra"
                                 value={newName}
                                 onChange={(e) => setNewName(e.target.value)}
-                                className="bg-white"
+                                className="h-14 text-lg bg-white border-orange-200"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="price">Precio (ARS)</Label>
+                            <Label htmlFor="price" className="text-base">Precio (ARS)</Label>
                             <Input
                                 id="price"
                                 type="number"
                                 placeholder="0.00"
                                 value={newPrice}
                                 onChange={(e) => setNewPrice(e.target.value)}
-                                className="bg-white"
+                                className="h-14 text-lg bg-white border-orange-200"
                             />
                         </div>
                         <Button
-                            className="w-full bg-orange-600 hover:bg-orange-700 text-white mt-2"
+                            className="w-full h-14 text-lg bg-orange-600 hover:bg-orange-700 text-white mt-4 font-bold rounded-xl shadow-md"
                             onClick={handleCreateProduct}
                             disabled={createLoading || !newName || !newPrice}
                         >
-                            {createLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                            {createLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Plus className="mr-2 h-6 w-6" />}
                             Crear Producto
                         </Button>
                     </CardContent>
@@ -328,21 +329,21 @@ export function ScanInterface() {
                             </span>
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-6 space-y-4">
+                    <CardContent className="pt-6 space-y-6">
                         <div className="flex items-center justify-between gap-4">
                             <Button
                                 size="lg"
                                 variant="outline"
-                                className="h-16 w-16 rounded-full border-2 border-slate-200"
+                                className="h-20 w-20 rounded-2xl border-2 border-slate-200 shadow-sm active:scale-95 transition-transform"
                                 onClick={() => handleStockUpdate(-1)}
                                 disabled={loading}
                             >
-                                <Minus className="h-8 w-8 text-slate-500" />
+                                <Minus className="h-10 w-10 text-slate-600" />
                             </Button>
 
-                            <div className="flex-1 text-center">
-                                <Label className="text-xs text-muted-foreground uppercase tracking-wide">Cantidad</Label>
-                                <div className="text-4xl font-bold tabular-nums text-slate-900">
+                            <div className="flex-1 text-center bg-slate-50 py-2 rounded-xl border border-slate-100">
+                                <Label className="text-xs text-muted-foreground uppercase tracking-wide font-semibold block mb-1">Cantidad Actual</Label>
+                                <div className="text-6xl font-black tabular-nums text-slate-900 tracking-tight">
                                     {product.stock}
                                 </div>
                             </div>
@@ -350,26 +351,26 @@ export function ScanInterface() {
                             <Button
                                 size="lg"
                                 variant="outline"
-                                className="h-16 w-16 rounded-full border-2 border-slate-200"
+                                className="h-20 w-20 rounded-2xl border-2 border-slate-200 shadow-sm active:scale-95 transition-transform"
                                 onClick={() => handleStockUpdate(1)}
                                 disabled={loading}
                             >
-                                <Plus className="h-8 w-8 text-slate-500" />
+                                <Plus className="h-10 w-10 text-slate-600" />
                             </Button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 pt-4">
-                            <Button variant="outline" className="h-12 border-red-100 bg-red-50 text-red-900 hover:bg-red-100" onClick={() => handleStockUpdate(-5)}>
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <Button variant="outline" className="h-14 text-base font-medium border-red-100 bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200" onClick={() => handleStockUpdate(-5)}>
                                 - 5 u.
                             </Button>
-                            <Button variant="outline" className="h-12 border-blue-100 bg-blue-50 text-blue-900 hover:bg-blue-100" onClick={() => handleStockUpdate(5)}>
+                            <Button variant="outline" className="h-14 text-base font-medium border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-200" onClick={() => handleStockUpdate(5)}>
                                 + 5 u.
                             </Button>
                         </div>
                     </CardContent>
-                    <CardFooter className="bg-slate-50 rounded-b-lg pt-4">
-                        <Button className="w-full" onClick={resetScan}>
-                            <Barcode className="mr-2 h-4 w-4" /> Escanear Siguiente
+                    <CardFooter className="bg-slate-50 rounded-b-xl pt-6 pb-6 border-t border-slate-100">
+                        <Button className="w-full h-14 text-lg font-bold shadow-md bg-slate-900 text-white hover:bg-slate-800" onClick={resetScan}>
+                            <Barcode className="mr-2 h-6 w-6" /> Terminar / Siguiente
                         </Button>
                     </CardFooter>
                 </Card>
