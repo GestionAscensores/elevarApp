@@ -1,13 +1,15 @@
-'use client'
-
+// Imports updated
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { registerVisit } from '@/actions/maintenance'
+import { createTask } from '@/actions/tasks'
 import { toast } from 'sonner'
-import { MapPin, Camera, Loader2, Send } from 'lucide-react'
+import { MapPin, Camera, Loader2, Send, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface VisitFormProps {
     clientId: string
@@ -22,13 +24,8 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
     const [loading, setLoading] = useState(false)
     const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null)
     const [geoError, setGeoError] = useState<string | null>(null)
-    const [proof, setProof] = useState<string | null>(null) // For now just a placeholder string or handle file upload later if implementing storage
-
-    // Mock file upload - in real app would upload to S3/Blob and get URL
-    // For MVP we might just store a base64 string or skip storage if not configured
-    // I will skip actual file upload logic for now and just simulate it or focused on Geo + Notes
-    // If user wants "Proof", I'll add a file input but maybe just store the name or simple base64 if small.
-    // Given the constraints and no storage bucket setup mentioned, I'll focus on Geo + Notes as primary proof.
+    const [proof, setProof] = useState<string | null>(null)
+    const [addTask, setAddTask] = useState(false)
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -54,16 +51,13 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
 
         const publicNotes = formData.get('publicNotes') as string
         const privateNotes = formData.get('privateNotes') as string
-        // const file = formData.get('proof') as File 
-
-        // In a real scenario, we upload `file` to blob storage here and get `proofUrl`.
-        // For this MVP, we will assume proofUrl is empty or just a placeholder if file selected.
         const proofUrl = proof ? "Simulated Upload" : undefined
 
+        // 1. Register Visit
         const res = await registerVisit({
             clientId,
             technicianId,
-            type: 'Rutina', // Default for now, could add selector
+            type: 'Rutina',
             publicNotes,
             privateNotes,
             locationLat: location?.lat,
@@ -71,6 +65,23 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
             proofUrl,
             equipmentId
         })
+
+        // 2. Register Task if checked
+        if (addTask && !res.error) {
+            const taskDesc = formData.get('taskDescription') as string
+            const taskPriority = formData.get('taskPriority') as string
+
+            if (taskDesc) {
+                await createTask({
+                    clientId,
+                    equipmentId,
+                    description: taskDesc,
+                    priority: taskPriority || 'NORMAL',
+                    createdBy: technicianName
+                })
+                toast.info("Tarea pendiente registrada")
+            }
+        }
 
         if (res.error) {
             toast.error(res.error)
@@ -113,6 +124,47 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
                             className="resize-none"
                             required
                         />
+                    </div>
+
+                    {/* Pending Task Section */}
+                    <div className="border rounded-lg p-4 bg-orange-50/50 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                                <div className="space-y-0.5">
+                                    <Label className="text-base font-semibold text-orange-900 cursor-pointer" onClick={() => setAddTask(!addTask)}>¿Detectó fallas?</Label>
+                                    <p className="text-xs text-orange-700">Registrar tarea pendiente</p>
+                                </div>
+                            </div>
+                            <Switch checked={addTask} onCheckedChange={setAddTask} />
+                        </div>
+
+                        {addTask && (
+                            <div className="space-y-4 pt-2 animate-in slide-in-from-top-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="taskDescription">Descripción del Problema</Label>
+                                    <Textarea
+                                        id="taskDescription"
+                                        name="taskDescription"
+                                        placeholder="Ej: Ruido en cuarto de máquinas..."
+                                        required={addTask}
+                                        className="bg-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="taskPriority">Prioridad</Label>
+                                    <Select name="taskPriority" defaultValue="NORMAL">
+                                        <SelectTrigger className="bg-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="NORMAL">Normal</SelectItem>
+                                            <SelectItem value="URGENT">Urgente 🚨</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">

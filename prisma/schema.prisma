@@ -94,6 +94,7 @@ model Client {
   priceHistory          PriceHistory[]
   receipts              Receipt[]
   maintenanceVisits     MaintenanceVisit[]
+  tasks                 MaintenanceTask[]
 
   @@unique([userId, cuit, address])
 }
@@ -257,6 +258,7 @@ model Equipment {
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
   visits       MaintenanceVisit[]
+  tasks        MaintenanceTask[]
 
   @@index([clientId])
 }
@@ -302,7 +304,26 @@ model MaintenanceVisit {
   equipment    Equipment?         @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
   technician   Technician         @relation(fields: [technicianId], references: [id])
 
-  @@index([clientId])
   @@index([equipmentId])
   @@index([technicianId])
+}
+
+model MaintenanceTask {
+  id          String    @id @default(cuid())
+  clientId    String
+  equipmentId String?
+  
+  description String    @db.Text
+  status      String    @default("PENDING") // PENDING, IN_PROGRESS, DONE
+  priority    String    @default("NORMAL") // NORMAL, URGENT
+  
+  createdBy   String?   // Technician Name or User ID
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  equipment   Equipment? @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  
+  @@index([clientId])
+  @@index([status])
 }

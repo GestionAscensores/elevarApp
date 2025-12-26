@@ -18,7 +18,8 @@ import {
     Receipt, // Receipts
     FileDiff, // Credit Note
     Barcode, // Inventory Scan
-    UserCog // Technicians
+    UserCog, // Technicians
+    AlertTriangle // Pending Tasks
     // Activity
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -78,6 +79,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
         },
         { href: '/dashboard/config', label: 'Configuración', icon: Settings },
         { href: '/dashboard/technicians', label: 'Técnicos', icon: UserCog },
+        { href: '/dashboard/tasks', label: 'Tareas Pendientes', icon: AlertTriangle }, // New Item
     ]
 
     // Admin nav item

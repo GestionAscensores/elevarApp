@@ -68,7 +68,7 @@ export default async function ClientValidPage({ params }: { params: Promise<{ id
                     <ClientInvoiceList invoices={serializedClient.invoices} />
                 </TabsContent>
                 <TabsContent value="equipment">
-                    <EquipmentList clientId={id} equipment={equipment} />
+                    <EquipmentList clientId={id} equipment={equipment} clientName={client.name} />
                 </TabsContent>
             </Tabs>
         </div>

@@ -130,8 +130,24 @@ export async function registerVisit(data: {
         }
 
         return { success: true }
-    } catch (e: any) {
-        console.error("REGISTER VISIT ERROR:", e)
         return { error: `Error: ${e.message || "Error desconocido al registrar"}` }
+    }
+}
+
+export async function getEquipmentVisits(equipmentId: string) {
+    try {
+        const visits = await prisma.maintenanceVisit.findMany({
+            where: { equipmentId },
+            orderBy: { date: 'desc' },
+            include: {
+                technician: {
+                    select: { name: true, avatarUrl: true }
+                }
+            }
+        })
+        return visits
+    } catch (e) {
+        console.error("Error fetching equipment visits:", e)
+        return []
     }
 }

@@ -21,7 +21,9 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-export function EquipmentList({ clientId, equipment }: { clientId: string, equipment: any[] }) {
+import { EquipmentHistorySheet } from './equipment-history-sheet'
+
+export function EquipmentList({ clientId, equipment, clientName }: { clientId: string, equipment: any[], clientName: string }) {
     const router = useRouter()
 
     const handleDelete = async (id: string) => {
@@ -85,6 +87,12 @@ export function EquipmentList({ clientId, equipment }: { clientId: string, equip
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
+                                            <EquipmentHistorySheet
+                                                equipmentId={item.id}
+                                                equipmentName={item.name}
+                                                clientName={clientName}
+                                            />
+
                                             <Button size="icon" variant="ghost" title="Ver QR" onClick={() => router.push(`/dashboard/equipment/${item.id}/qr-poster`)}>
                                                 <QrCode className="h-4 w-4 text-blue-600" />
                                             </Button>
@@ -118,6 +126,6 @@ export function EquipmentList({ clientId, equipment }: { clientId: string, equip
                     </TableBody>
                 </Table>
             </CardContent>
-        </Card>
+        </Card >
     )
 }
