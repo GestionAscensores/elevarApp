@@ -5,6 +5,7 @@ import { verifySession } from "@/lib/session"
 import { db } from "@/lib/db"
 import { getDashboardMetrics } from "@/actions/dashboard"
 import { getPriceChartData } from "@/actions/pricing"
+import { getPendingTasks } from "@/actions/tasks"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -18,6 +19,7 @@ import { TrialGauge } from "@/components/dashboard/trial-gauge"
 import { AutoBillingNotifier } from "@/components/dashboard/auto-billing-notifier"
 import { PendingDraftsAlert } from "@/components/dashboard/pending-drafts-alert"
 import { PriceAlertsWidget } from "@/components/dashboard/price-alerts-widget"
+import { PendingTasksWidget } from "@/components/dashboard/pending-tasks-widget"
 
 export default async function DashboardPage() {
     const session = await verifySession()
@@ -53,6 +55,7 @@ export default async function DashboardPage() {
 
     const metrics = await getDashboardMetrics()
     const priceData = await getPriceChartData()
+    const pendingTasks = await getPendingTasks()
 
     return (
         <div className="space-y-4 md:space-y-6">
@@ -88,7 +91,11 @@ export default async function DashboardPage() {
                     <TrialGauge trialEndsAt={subscriptionData.trialEndsAt} />
                 )}
 
-                <div className={subscriptionData?.subscriptionStatus === 'trial' ? "col-span-full lg:col-span-4 block" : "col-span-full block"}>
+                {/* Pending Tasks Widget (Takes remaining space or dedicated if gauge is hidden) */}
+                <PendingTasksWidget tasks={pendingTasks} />
+
+                {/* Monotributo Card */}
+                <div className={subscriptionData?.subscriptionStatus === 'trial' ? "col-span-full lg:col-span-4 md:col-span-2 block" : "col-span-full lg:col-span-4 block"}>
                     <MonotributoCard />
                 </div>
             </div>
