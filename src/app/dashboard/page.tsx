@@ -82,13 +82,13 @@ export default async function DashboardPage() {
 
             <DashboardStats />
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 w-full">
                 {/* Trial Gauge - Only show if in trial */}
                 {subscriptionData?.subscriptionStatus === 'trial' && subscriptionData?.trialEndsAt && (
                     <TrialGauge trialEndsAt={subscriptionData.trialEndsAt} />
                 )}
 
-                <div className={subscriptionData?.subscriptionStatus === 'trial' ? "col-span-full lg:col-span-4" : "col-span-full"}>
+                <div className={subscriptionData?.subscriptionStatus === 'trial' ? "col-span-full lg:col-span-4 block" : "col-span-full block"}>
                     <MonotributoCard />
                 </div>
             </div>
