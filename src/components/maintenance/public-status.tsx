@@ -16,11 +16,12 @@ interface PublicStatusProps {
         locationLat?: number | null
         locationLng?: number | null
     } | null
+    companyLogo?: string | null
 }
 
-export function PublicStatus({ clientName, status, lastVisit }: PublicStatusProps) {
+export function PublicStatus({ clientName, status, lastVisit, companyLogo }: PublicStatusProps) {
     // Determine status color/icon
-    const isOk = status === 'Completada' || status === 'En Servicio'
+    const isOk = status === 'Completada' || status === 'En Servicio' || status === 'OPERATIVE'
     // Default to OK if we just have visits. Real logic requires explicit status field on Client or Last Visit Type check.
     // For this MVP, we assume if last visit exists, it's info.
 
@@ -32,12 +33,19 @@ export function PublicStatus({ clientName, status, lastVisit }: PublicStatusProp
     return (
         <div className="space-y-6 w-full max-w-md mx-auto">
             {/* Header Status */}
-            <div className={`p-6 rounded-3xl text-center shadow-lg transform transition-all hover:scale-105 ${isOk ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white' : 'bg-gradient-to-br from-yellow-500 to-orange-600 text-white'}`}>
+            <div className={`p-6 rounded-3xl text-center shadow-lg transform transition-all hover:scale-105 ${isOk ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white' : 'bg-gradient-to-br from-red-500 to-red-600 text-white'}`}>
+                {companyLogo && (
+                    <div className="flex justify-center mb-4">
+                        <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                            <img src={companyLogo} alt="Logo" className="h-12 w-auto object-contain" />
+                        </div>
+                    </div>
+                )}
                 <div className="flex justify-center mb-4">
                     {isOk ? <CheckCircle className="h-16 w-16 opacity-90" /> : <AlertTriangle className="h-16 w-16 opacity-90" />}
                 </div>
                 <h1 className="text-3xl font-bold tracking-tight mb-2">
-                    {isOk ? 'EN SERVICIO' : 'EN MANTENIMIENTO'}
+                    {isOk ? 'EN SERVICIO' : 'FUERA DE SERVICIO'}
                 </h1>
                 <p className="text-white/80 font-medium text-lg">{clientName}</p>
             </div>

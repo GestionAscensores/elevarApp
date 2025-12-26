@@ -251,6 +251,7 @@ model Equipment {
   qrCode       String             @unique
   name         String
   type         String             @default("Ascensor") // Ascensor, Montacargas, Plataforma
+  status       String             @default("OPERATIVE") // OPERATIVE, STOPPED, LIMITED
   description  String?
   installDate  DateTime?
   lastService  DateTime?

@@ -16,14 +16,15 @@ interface ScanPageManagerProps {
         companyId: string
         status: string
         lastVisit: any
+        companyLogo?: string | null
     }
 }
 
 export function ScanPageManager({ clientId, equipmentId, initialData }: ScanPageManagerProps) {
     const [view, setView] = useState<'public' | 'tech'>('public')
-    const [technician, setTechnician] = useState<{ id: string, name: string } | null>(null)
+    const [technician, setTechnician] = useState<{ id: string, name: string, avatarUrl?: string | null } | null>(null)
 
-    const handleLoginSuccess = (tech: { id: string, name: string }) => {
+    const handleLoginSuccess = (tech: { id: string, name: string, avatarUrl?: string | null }) => {
         setTechnician(tech)
         setView('tech')
     }
@@ -39,10 +40,18 @@ export function ScanPageManager({ clientId, equipmentId, initialData }: ScanPage
     if (view === 'tech' && technician) {
         return (
             <div className="container max-w-lg mx-auto p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Button variant="ghost" className="mb-4" onClick={() => setView('public')}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Volver
-                </Button>
+                <div className="flex items-center justify-between mb-6">
+                    <Button variant="ghost" onClick={() => setView('public')}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Volver
+                    </Button>
+                    <div className="flex items-center gap-2">
+                        {technician.avatarUrl && (
+                            <img src={technician.avatarUrl} alt="Tech" className="w-8 h-8 rounded-full border border-gray-200" />
+                        )}
+                        <span className="font-medium text-lg text-primary">Hola, {technician.name.split(' ')[0]} 👋</span>
+                    </div>
+                </div>
                 <VisitForm
                     clientId={clientId}
                     equipmentId={equipmentId}
@@ -61,6 +70,7 @@ export function ScanPageManager({ clientId, equipmentId, initialData }: ScanPage
                 clientName={initialData.clientName}
                 status={initialData.status}
                 lastVisit={initialData.lastVisit}
+                companyLogo={initialData.companyLogo}
             />
 
             <TechLoginModal

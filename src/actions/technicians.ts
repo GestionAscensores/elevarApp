@@ -25,6 +25,7 @@ export async function createTechnician(fd: FormData) {
 
     const name = fd.get('name') as string
     const pin = fd.get('pin') as string
+    const avatarUrl = fd.get('avatarUrl') as string | null
 
     if (!name || !pin || pin.length !== 4) {
         return { error: "Datos inválidos. El PIN debe tener 4 dígitos." }
@@ -35,7 +36,8 @@ export async function createTechnician(fd: FormData) {
             data: {
                 userId: session.user.id,
                 name,
-                pin
+                pin,
+                avatarUrl
             }
         })
         revalidatePath('/dashboard/technicians')
@@ -73,6 +75,7 @@ export async function validateTechnicianPin(userId: string, pin: string) {
 
     return {
         id: tech.id,
-        name: tech.name
+        name: tech.name,
+        avatarUrl: tech.avatarUrl
     }
 }

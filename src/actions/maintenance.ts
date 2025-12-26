@@ -27,12 +27,19 @@ export async function getPublicStatus(clientId: string) {
 
     if (!client) return null
 
+    // Fetch User Config for Logo
+    const userConfig = await prisma.userConfig.findUnique({
+        where: { userId: client.userId },
+        select: { logoUrl: true }
+    })
+
     const lastVisit = client.maintenanceVisits[0]
 
     return {
         clientName: client.name,
         clientAddress: client.address,
         companyId: client.userId,
+        companyLogo: userConfig?.logoUrl,
         status: lastVisit ? lastVisit.status : 'Sin Datos', // 'Completada', 'En Reparacion'
         lastVisit: lastVisit ? {
             date: lastVisit.date,
@@ -105,7 +112,8 @@ export async function registerVisit(data: {
     locationLat?: number,
     locationLng?: number,
     proofUrl?: string,
-    equipmentId?: string
+    equipmentId?: string,
+    equipmentStatus?: string
 }) {
     try {
         await prisma.maintenanceVisit.create({
@@ -122,6 +130,14 @@ export async function registerVisit(data: {
                 equipmentId: data.equipmentId
             }
         })
+
+        // Update Equipment Status if provided
+        if (data.equipmentId && data.equipmentStatus) {
+            await prisma.equipment.update({
+                where: { id: data.equipmentId },
+                data: { status: data.equipmentStatus }
+            })
+        }
 
         // Revalidate generic client page AND equipment specific page
         revalidatePath(`/scan/${data.clientId}`)
@@ -151,5 +167,19 @@ export async function getEquipmentVisits(equipmentId: string) {
     } catch (e) {
         console.error("Error fetching equipment visits:", e)
         return []
+    }
+}
+
+export async function updateMaintenanceVisit(visitId: string, data: { status?: string, publicNotes?: string, privateNotes?: string }) {
+    try {
+        await prisma.maintenanceVisit.update({
+            where: { id: visitId },
+            data
+        })
+        revalidatePath('/dashboard/clients') // Rough revalidation
+        return { success: true }
+    } catch (e: any) {
+        console.error("UPDATE VISIT ERROR:", e)
+        return { error: e.message }
     }
 }

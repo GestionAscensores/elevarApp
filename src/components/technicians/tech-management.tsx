@@ -16,18 +16,35 @@ interface Technician {
     name: string
     pin: string
     isActive: boolean
+    avatarUrl?: string | null
 }
 
 export function TechManagement({ initialTechnicians }: { initialTechnicians: Technician[] }) {
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
     const router = useRouter()
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setAvatarPreview(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         setIsLoading(true)
 
         const formData = new FormData(e.currentTarget)
+        if (avatarPreview) {
+            formData.set('avatarUrl', avatarPreview)
+        }
+
         const res = await createTechnician(formData)
 
         if (res.error) {
@@ -37,6 +54,7 @@ export function TechManagement({ initialTechnicians }: { initialTechnicians: Tec
                 description: "El técnico ha sido registrado exitosamente."
             })
             setOpen(false)
+            setAvatarPreview(null)
             router.refresh()
         }
         setIsLoading(false)
@@ -55,7 +73,10 @@ export function TechManagement({ initialTechnicians }: { initialTechnicians: Tec
     return (
         <div className="space-y-4">
             <div className="flex justify-end">
-                <Dialog open={open} onOpenChange={setOpen}>
+                <Dialog open={open} onOpenChange={(val) => {
+                    setOpen(val)
+                    if (!val) setAvatarPreview(null)
+                }}>
                     <DialogTrigger asChild>
                         <Button>
                             <Plus className="mr-2 h-4 w-4" />
@@ -71,6 +92,27 @@ export function TechManagement({ initialTechnicians }: { initialTechnicians: Tec
                         </DialogHeader>
                         <form onSubmit={handleSubmit}>
                             <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="avatar" className="text-right">
+                                        Foto
+                                    </Label>
+                                    <div className="col-span-3 flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border">
+                                            {avatarPreview ? (
+                                                <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover" />
+                                            ) : (
+                                                <User className="h-6 w-6 text-gray-400" />
+                                            )}
+                                        </div>
+                                        <Input
+                                            id="avatar"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            className="w-full text-xs"
+                                        />
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="name" className="text-right">
                                         Nombre
@@ -120,7 +162,16 @@ export function TechManagement({ initialTechnicians }: { initialTechnicians: Tec
                             <User className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{tech.name}</div>
+                            <div className="flex items-center gap-4 mb-2">
+                                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border">
+                                    {tech.avatarUrl ? (
+                                        <img src={tech.avatarUrl} alt={tech.name} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <User className="h-5 w-5 text-gray-400" />
+                                    )}
+                                </div>
+                                <div className="text-xl font-bold">{tech.name}</div>
+                            </div>
                             <div className="flex items-center mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded-md font-mono">
                                 <Key className="mr-2 h-3 w-3" />
                                 PIN: {tech.pin}

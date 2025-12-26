@@ -1,12 +1,12 @@
 // Imports updated
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { registerVisit } from '@/actions/maintenance'
 import { createTask } from '@/actions/tasks'
 import { toast } from 'sonner'
-import { MapPin, Camera, Loader2, Send, AlertTriangle } from 'lucide-react'
+import { MapPin, Camera, Loader2, Send, AlertTriangle, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -26,6 +26,8 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
     const [geoError, setGeoError] = useState<string | null>(null)
     const [proof, setProof] = useState<string | null>(null)
     const [addTask, setAddTask] = useState(false)
+    const [outOfService, setOutOfService] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -46,12 +48,24 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
         }
     }, [])
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                // Simple client-side compression could go here if needed
+                // For now, we assume reasonable sizes or accept the base64 string
+                setProof(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
     async function handleSubmit(formData: FormData) {
         setLoading(true)
 
         const publicNotes = formData.get('publicNotes') as string
         const privateNotes = formData.get('privateNotes') as string
-        const proofUrl = proof ? "Simulated Upload" : undefined
 
         // 1. Register Visit
         const res = await registerVisit({
@@ -62,8 +76,9 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
             privateNotes,
             locationLat: location?.lat,
             locationLng: location?.lng,
-            proofUrl,
-            equipmentId
+            proofUrl: proof || undefined,
+            equipmentId,
+            equipmentStatus: outOfService ? 'STOPPED' : 'OPERATIVE'
         })
 
         // 2. Register Task if checked
@@ -86,7 +101,7 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
         if (res.error) {
             toast.error(res.error)
         } else {
-            toast.success("Visita registrada con éxito")
+            toast.success("Remito Digital registrado con éxito")
             onSuccess()
         }
         setLoading(false)
@@ -96,7 +111,7 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
         <Card className="w-full max-w-md mx-auto mt-4 border-2 border-primary/20 shadow-xl">
             <CardHeader className="bg-primary/5 pb-4">
                 <CardTitle className="text-lg flex justify-between items-center">
-                    <span>Nueva Visita</span>
+                    <span>Remito Digital</span>
                     <span className="text-sm font-normal text-muted-foreground">{technicianName}</span>
                 </CardTitle>
             </CardHeader>
@@ -125,6 +140,26 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
                             required
                         />
                     </div>
+
+                    {/* Out of Service Toggle */}
+                    {equipmentId && (
+                        <div className={`border rounded-lg p-4 space-y-4 transition-colors ${outOfService ? 'bg-red-50 border-red-200' : 'bg-gray-50'}`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <AlertTriangle className={`h-5 w-5 ${outOfService ? 'text-red-600' : 'text-gray-400'}`} />
+                                    <div className="space-y-0.5">
+                                        <Label className={`text-base font-semibold cursor-pointer ${outOfService ? 'text-red-900' : 'text-gray-700'}`} onClick={() => setOutOfService(!outOfService)}>
+                                            Fuera de Servicio
+                                        </Label>
+                                        <p className={`text-xs ${outOfService ? 'text-red-700' : 'text-gray-500'}`}>
+                                            Marcar equipo como detenido
+                                        </p>
+                                    </div>
+                                </div>
+                                <Switch checked={outOfService} onCheckedChange={setOutOfService} className="data-[state=checked]:bg-red-600" />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Pending Task Section */}
                     <div className="border rounded-lg p-4 bg-orange-50/50 space-y-4">
@@ -177,13 +212,44 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
                         />
                     </div>
 
-                    {/* Proof Upload Placeholder */}
+                    {/* Proof Upload (Camera) */}
                     <div className="space-y-2">
-                        <Label>Comprobante (Opcional)</Label>
-                        <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toast.info("Carga de imágenes próximamente disponible")}>
-                            <Camera className="h-8 w-8 mb-2 opacity-50" />
-                            <span className="text-xs">Tomar foto / Subir remito</span>
-                        </div>
+                        <Label>Comprobante / Foto (Opcional)</Label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                        />
+
+                        {proof ? (
+                            <div className="relative rounded-lg overflow-hidden border border-gray-200 aspect-video bg-black/5">
+                                <img src={proof} alt="Proof" className="w-full h-full object-contain" />
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                                    onClick={() => {
+                                        setProof(null)
+                                        if (fileInputRef.current) fileInputRef.current.value = ''
+                                    }}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ) : (
+                            <div
+                                className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/50 transition-colors cursor-pointer active:bg-muted"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <Camera className="h-8 w-8 mb-2 text-blue-500" />
+                                <span className="text-sm font-medium text-blue-600">Tomar Foto</span>
+                                <span className="text-xs text-muted-foreground mt-1">Se adjuntará al remito</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex gap-3 pt-2">
@@ -192,7 +258,7 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
                         </Button>
                         <Button type="submit" className="flex-1" disabled={loading || !location}>
                             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            Registrar
+                            Enviar Remito
                         </Button>
                     </div>
                 </form>
