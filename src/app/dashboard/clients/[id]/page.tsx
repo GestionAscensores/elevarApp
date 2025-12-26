@@ -6,6 +6,8 @@ import { EquipmentList } from '@/components/maintenance/equipment-list'
 import { notFound, redirect } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+import { QRButton } from '@/components/maintenance/qr-button'
+
 export default async function ClientValidPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await verifySession()
     if (!session) redirect('/login')
@@ -48,7 +50,10 @@ export default async function ClientValidPage({ params }: { params: Promise<{ id
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold tracking-tight">Ficha del Cliente</h1>
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold tracking-tight">Ficha del Cliente</h1>
+                <QRButton clientId={id} />
+            </div>
 
             <Tabs defaultValue="history" className="w-full space-y-4">
                 <TabsList>

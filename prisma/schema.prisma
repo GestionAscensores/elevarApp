@@ -35,7 +35,7 @@ model User {
   receipts                 Receipt[]
   sessions                 Session[]
   config                   UserConfig?
-  maintenanceVisits        MaintenanceVisit[]
+  technicians              Technician[]
 }
 
 model UserConfig {
@@ -86,12 +86,14 @@ model Client {
   isActive              Boolean           @default(true)
   priceUpdateFrequency  String            @default("MONTHLY") // Enum-like: MONTHLY, QUARTERLY, SEMIANNUAL, ANNUAL, NO
   lastPriceUpdate       DateTime?         // Reference date for next update calculation
+  maintenancePin        String            @default("1234") // PIN for technician access
   user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   items                 ClientEquipment[]
   equipment             Equipment[]
   invoices              Invoice[]
   priceHistory          PriceHistory[]
   receipts              Receipt[]
+  maintenanceVisits     MaintenanceVisit[]
 
   @@unique([userId, cuit, address])
 }
@@ -252,29 +254,55 @@ model Equipment {
   installDate  DateTime?
   lastService  DateTime?
   client       Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  visits       MaintenanceVisit[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
+  visits       MaintenanceVisit[]
 
   @@index([clientId])
 }
 
+model Technician {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  pin       String   // 4 digits hashed or plain (plain for simplicity as requested "simple")
+  avatarUrl String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visits    MaintenanceVisit[]
+
+  @@unique([userId, pin])
+}
+
 model MaintenanceVisit {
   id           String    @id @default(cuid())
-  equipmentId  String
+  clientId     String
   technicianId String
   date         DateTime  @default(now())
   type         String    @default("Rutina") // Rutina, Guardia, Reparacion
   status       String    @default("Completada")
-  observations String?   @db.Text
-  signatureUrl String?
+  
+  // Data
+  publicNotes  String?   @db.Text
+  privateNotes String?   @db.Text
+  proofUrl     String?   // Photo or Signature
+  
+  // Geolocation
+  locationLat  Float?
+  locationLng  Float?
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   
-  equipment    Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
-  technician   User      @relation(fields: [technicianId], references: [id])
+  client       Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  equipmentId  String?
+  equipment    Equipment?         @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  technician   Technician         @relation(fields: [technicianId], references: [id])
 
+  @@index([clientId])
   @@index([equipmentId])
   @@index([technicianId])
 }

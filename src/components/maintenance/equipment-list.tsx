@@ -4,18 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Trash2, QrCode, PenSquare } from 'lucide-react'
+import { Trash2, QrCode } from 'lucide-react'
 import { deleteEquipment } from '@/actions/equipment'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { CreateEquipmentDialog } from './create-equipment-dialog'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export function EquipmentList({ clientId, equipment }: { clientId: string, equipment: any[] }) {
     const router = useRouter()
 
     const handleDelete = async (id: string) => {
-        if (!confirm('¿Seguro que deseas eliminar este equipo y su historial?')) return
-
         const res = await deleteEquipment(id)
         if (res.error) {
             toast.error(res.error)
@@ -76,12 +85,31 @@ export function EquipmentList({ clientId, equipment }: { clientId: string, equip
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Button size="icon" variant="ghost" title="Ver QR">
+                                            <Button size="icon" variant="ghost" title="Ver QR" onClick={() => router.push(`/dashboard/equipment/${item.id}/qr-poster`)}>
                                                 <QrCode className="h-4 w-4 text-blue-600" />
                                             </Button>
-                                            <Button size="icon" variant="ghost" onClick={() => handleDelete(item.id)} title="Eliminar">
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                            </Button>
+
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button size="icon" variant="ghost" title="Eliminar">
+                                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>¿Estás seguro absoluta?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Esta acción no se puede deshacer. Se eliminará el equipo <strong>{item.name}</strong> y todo su historial de visitas asociado.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-red-600 hover:bg-red-700">
+                                                            Eliminar Equipo
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         </div>
                                     </TableCell>
                                 </TableRow>

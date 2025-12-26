@@ -17,7 +17,8 @@ import {
     Archive, // Archived
     Receipt, // Receipts
     FileDiff, // Credit Note
-    Barcode // Inventory Scan
+    Barcode, // Inventory Scan
+    UserCog // Technicians
     // Activity
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -76,6 +77,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
             ]
         },
         { href: '/dashboard/config', label: 'Configuración', icon: Settings },
+        { href: '/dashboard/technicians', label: 'Técnicos', icon: UserCog },
     ]
 
     // Admin nav item
