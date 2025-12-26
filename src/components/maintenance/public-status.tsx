@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, User, MapPin, CheckCircle, AlertTriangle, History } from 'lucide-react'
+import { Calendar, User, MapPin, CheckCircle, AlertTriangle, History, ChevronDown, ChevronUp } from 'lucide-react'
 import Image from 'next/image'
+import { Button } from '@/components/ui/button'
 
 interface PublicStatusProps {
     clientName: string
@@ -28,6 +30,8 @@ interface PublicStatusProps {
 }
 
 export function PublicStatus({ clientName, status, lastVisit, companyLogo, history = [] }: PublicStatusProps) {
+    const [showHistory, setShowHistory] = useState(false)
+
     // Determine status color/icon
     const isOk = status === 'Completada' || status === 'En Servicio' || status === 'OPERATIVE'
 
@@ -132,43 +136,50 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                     </div>
                                 </div>
                             )}
+
+                            {/* History Toggle Button */}
+                            {history && history.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full mt-4 flex items-center justify-center gap-2"
+                                    onClick={() => setShowHistory(!showHistory)}
+                                >
+                                    <History className="h-4 w-4" />
+                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial de Visitas'}
+                                    {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                </Button>
+                            )}
                         </CardContent>
                     </Card>
                 )}
 
-                {/* 4. History (Past 5 Visits) */}
-                {history && history.length > 0 && (
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                            <History className="h-5 w-5" />
-                            Historial Reciente
-                        </h3>
-                        <div className="grid gap-3">
-                            {history.map((visit) => (
-                                <Card key={visit.id} className="border shadow-sm">
-                                    <CardContent className="p-4 flex gap-4">
-                                        <div className="h-10 w-10 rounded-full bg-gray-100 flex-shrink-0 overflow-hidden">
-                                            {visit.technicianAvatar ? (
-                                                <Image src={visit.technicianAvatar} alt={visit.technicianName} width={40} height={40} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <User className="h-5 w-5 text-gray-400 m-auto" />
-                                            )}
+                {/* 4. History (Past 5 Visits) - Collapsible */}
+                {history && history.length > 0 && showHistory && (
+                    <div className="space-y-4 animate-in slide-in-from-top-4 fade-in duration-300">
+                        {history.map((visit) => (
+                            <Card key={visit.id} className="border shadow-sm">
+                                <CardContent className="p-4 flex gap-4">
+                                    <div className="h-10 w-10 rounded-full bg-gray-100 flex-shrink-0 overflow-hidden">
+                                        {visit.technicianAvatar ? (
+                                            <Image src={visit.technicianAvatar} alt={visit.technicianName} width={40} height={40} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="h-5 w-5 text-gray-400 m-auto" />
+                                        )}
+                                    </div>
+                                    <div className="space-y-1 flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <p className="font-medium text-sm">{visit.technicianName}</p>
+                                            <span className="text-xs text-muted-foreground">
+                                                {new Date(visit.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                            </span>
                                         </div>
-                                        <div className="space-y-1 flex-1">
-                                            <div className="flex justify-between items-start">
-                                                <p className="font-medium text-sm">{visit.technicianName}</p>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {new Date(visit.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                                </span>
-                                            </div>
-                                            {visit.publicNotes && (
-                                                <p className="text-sm text-gray-600 line-clamp-2">"{visit.publicNotes}"</p>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
+                                        {visit.publicNotes && (
+                                            <p className="text-sm text-gray-600 line-clamp-2">"{visit.publicNotes}"</p>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
                 )}
             </div>
