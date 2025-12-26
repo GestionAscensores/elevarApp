@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from 'sonner'
-import { Loader2, Plus, Minus, RefreshCw, Barcode, Camera } from 'lucide-react'
+import { Loader2, Plus, Minus, RefreshCw, Barcode, Camera, Search } from 'lucide-react'
 
 // Define the scanner instance type loosely or use `any` if types are tricky with the library import
 // We'll import dynamically or just use standard import if `npm i` finished.
@@ -107,6 +107,12 @@ export function ScanInterface() {
 
 
 
+    const resetScan = () => {
+        setScannedCode(null)
+        setProduct(null)
+        // Effect will re-init scanner
+    }
+
     // Quick Create State
     const [createLoading, setCreateLoading] = useState(false)
     const [newName, setNewName] = useState('')
@@ -138,6 +144,14 @@ export function ScanInterface() {
 
     const [imageLoading, setImageLoading] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [manualCode, setManualCode] = useState('')
+
+    const handleManualSearch = () => {
+        if (manualCode.trim()) {
+            onScanSuccess(manualCode.trim(), null)
+            setManualCode('')
+        }
+    }
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -204,6 +218,27 @@ export function ScanInterface() {
                         <p className="text-sm text-center text-muted-foreground mt-2">
                             Apunta la cámara al código de barras o QR
                         </p>
+                    </CardContent>
+                </Card>
+            )}
+
+            {!scannedCode && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium text-center">Ingreso Manual</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex gap-2">
+                        <Input
+                            placeholder="Escribe el código..."
+                            value={manualCode}
+                            onChange={(e) => setManualCode(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleManualSearch()
+                            }}
+                        />
+                        <Button onClick={handleManualSearch} disabled={!manualCode}>
+                            <Search className="h-4 w-4" />
+                        </Button>
                     </CardContent>
                 </Card>
             )}
