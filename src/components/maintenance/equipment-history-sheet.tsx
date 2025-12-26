@@ -23,6 +23,9 @@ interface EquipmentHistorySheetProps {
 }
 
 export function EquipmentHistorySheet({ equipmentId, equipmentName, clientName }: EquipmentHistorySheetProps) {
+    const [open, setOpen] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [visits, setVisits] = useState<any[]>([])
     const [editingVisit, setEditingVisit] = useState<any | null>(null)
     const [selectedVisits, setSelectedVisits] = useState<string[]>([])
 
