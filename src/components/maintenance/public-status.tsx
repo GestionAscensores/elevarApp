@@ -62,55 +62,128 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
 
             <div className="w-full max-w-md px-4 space-y-6 pb-12">
 
-                {/* ... existing code ... */}
+                {/* 2. Status Card */}
+                <div className={`p-6 rounded-3xl text-center shadow-md transform transition-all ${isOk ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white' : 'bg-gradient-to-br from-red-500 to-red-600 text-white'}`}>
+                    <div className="flex justify-center mb-4">
+                        {isOk ? <CheckCircle className="h-16 w-16 opacity-90" /> : <AlertTriangle className="h-16 w-16 opacity-90" />}
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight mb-2">
+                        {isOk ? 'EN SERVICIO' : 'FUERA DE SERVICIO'}
+                    </h1>
+                    <p className="text-white/80 font-medium text-lg">{clientName}</p>
+                </div>
 
-                {/* History Toggle Button */}
-                {history && history.length > 0 && (
-                    <Button
-                        variant="outline"
-                        className="w-full mt-4 flex items-center justify-center gap-2"
-                        onClick={() => {
-                            console.log('Toggling history', !showHistory);
-                            setShowHistory(!showHistory)
-                        }}
-                    >
-                        <History className="h-4 w-4" />
-                        {showHistory ? 'Ocultar Historial' : 'Ver Historial (v0.2.3)'}
-                        {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
-                )}
-
-                {/* 4. History List (Inside Card) */}
-                {history && history.length > 0 && showHistory && (
-                    <div className="pt-4 border-t mt-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
-                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Historial Reciente</h4>
-                        {history.map((visit) => (
-                            <div key={visit.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border">
-                                <div className="h-16 w-16 rounded-full bg-white border flex-shrink-0 overflow-hidden">
-                                    {visit.technicianAvatar ? (
-                                        <Image src={visit.technicianAvatar} alt={visit.technicianName} width={64} height={64} className="w-full h-full object-cover" />
+                {/* 3. Last Visit Details (Map & Tech) - Only if we have data */}
+                {lastVisit && (
+                    <Card className="border-0 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-muted/30 pb-4">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Calendar className="h-5 w-5 text-primary" />
+                                Última Visita
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground ml-7">
+                                {new Date(lastVisit.date).toLocaleDateString('es-AR', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}
+                            </p>
+                        </CardHeader>
+                        <CardContent className="pt-6 space-y-6">
+                            {/* Technician Info */}
+                            <div className="flex items-center gap-4">
+                                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
+                                    {lastVisit.technicianAvatar ? (
+                                        <Image src={lastVisit.technicianAvatar} alt={lastVisit.technicianName} width={64} height={64} className="w-full h-full object-cover" />
                                     ) : (
-                                        <User className="h-8 w-8 text-gray-400 m-auto" />
+                                        <User className="h-8 w-8 text-primary" />
                                     )}
                                 </div>
-                                <div className="space-y-1 flex-1 flex flex-col justify-center">
-                                    <div className="flex justify-between items-start">
-                                        <p className="font-medium text-sm">{visit.technicianName}</p>
-                                        <span className="text-xs text-muted-foreground">
-                                            {new Date(visit.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                    {visit.publicNotes && (
-                                        <p className="text-xs text-gray-600 line-clamp-2 italic">"{visit.publicNotes}"</p>
-                                    )}
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Técnico a cargo</p>
+                                    <p className="font-bold text-lg">{lastVisit.technicianName}</p>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+
+                            {/* Public Note */}
+                            {lastVisit.publicNotes && (
+                                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                                    <p className="text-blue-900 italic">"{lastVisit.publicNotes}"</p>
+                                </div>
+                            )}
+
+                            {/* Map proof */}
+                            {mapUrl && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                        <MapPin className="h-4 w-4" />
+                                        Ubicación del reporte
+                                    </div>
+                                    <div className="rounded-xl overflow-hidden border shadow-sm aspect-video relative bg-slate-100">
+                                        <iframe
+                                            src={mapUrl}
+                                            width="100%"
+                                            height="100%"
+                                            style={{ border: 0 }}
+                                            allowFullScreen
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* History Toggle Button */}
+                            {history && history.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full mt-4 flex items-center justify-center gap-2"
+                                    onClick={() => {
+                                        console.log('Toggling history', !showHistory);
+                                        setShowHistory(!showHistory)
+                                    }}
+                                >
+                                    <History className="h-4 w-4" />
+                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial (v0.2.3)'}
+                                    {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                </Button>
+                            )}
+
+                            {/* 4. History List (Inside Card) */}
+                            {history && history.length > 0 && showHistory && (
+                                <div className="pt-4 border-t mt-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
+                                    <h4 className="font-semibold text-sm text-muted-foreground mb-2">Historial Reciente</h4>
+                                    {history.map((visit) => (
+                                        <div key={visit.id} className="flex gap-4 p-4 bg-slate-50 rounded-lg border">
+                                            <div className="h-16 w-16 rounded-full bg-white border flex-shrink-0 overflow-hidden">
+                                                {visit.technicianAvatar ? (
+                                                    <Image src={visit.technicianAvatar} alt={visit.technicianName} width={64} height={64} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="h-8 w-8 text-gray-400 m-auto" />
+                                                )}
+                                            </div>
+                                            <div className="space-y-1 flex-1 flex flex-col justify-center">
+                                                <div className="flex justify-between items-start">
+                                                    <p className="font-medium text-sm">{visit.technicianName}</p>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {new Date(visit.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                                {visit.publicNotes && (
+                                                    <p className="text-xs text-gray-600 line-clamp-2 italic">"{visit.publicNotes}"</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 )}
-            </CardContent>
-        </Card>
-            </div >
-        </div >
+            </div>
+        </div>
     )
 }
