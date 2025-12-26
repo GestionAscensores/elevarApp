@@ -13,8 +13,26 @@ import { ThemeProvider } from "@/components/providers/theme-provider"
 import { PaletteProvider } from "@/components/providers/palette-provider"
 
 export const metadata: Metadata = {
-  title: "Elevar App",
-  description: "Sistema de gestión para mantenimiento de ascensores",
+  title: "Elevar App | Software para Mantenimiento de Ascensores y Abonos",
+  description: "La plataforma #1 para empresas de ascensores en Argentina. Bitácora Digital QR, Geolocalización de Técnicos, Facturación de Abonos AFIP y Gestión de Repuestos.",
+  keywords: [
+    "Software Mantenimiento Ascensores",
+    "App Ascensores Argentina",
+    "Gestión de Abonos Mensuales",
+    "Bitácora Digital QR Ascensores",
+    "Conservadores de Elevadores",
+    "Representante Técnico Ascensores",
+    "Facturación Electrónica AFIP",
+    "Control de Rutas Técnicos",
+    "Libro de Inspección Digital"
+  ],
+  authors: [{ name: "Elevar App" }],
+  openGraph: {
+    title: "Elevar App | Modernizá tu Empresa de Ascensores",
+    description: "Digitalizá tus rutas, abonos y reportes técnicos con la App líder del mercado.",
+    type: "website",
+    locale: "es_AR",
+  },
 };
 
 export default function RootLayout({

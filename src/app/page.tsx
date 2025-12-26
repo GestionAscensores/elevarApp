@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, ChevronRight, Zap, Building2, ShieldCheck, Mail, Users, ArrowRight, BarChart3, Edit, Sparkles } from 'lucide-react'
+import { CheckCircle2, ChevronRight, Zap, Building2, ShieldCheck, Mail, Users, ArrowRight, BarChart3, Edit, Sparkles, MapPin, QrCode, Camera, Package, TrendingUp } from 'lucide-react'
 
 export default function LandingPage() {
   return (
@@ -34,14 +34,14 @@ export default function LandingPage() {
           <div className="container flex flex-col items-center text-center max-w-5xl mx-auto px-4 relative z-10">
             <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium transition-colors border-primary/20 bg-primary/10 text-primary mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Sparkles className="mr-2 h-4 w-4" />
-              Nuevo: App Móvil para Escanear Repuestos 📸
+              Nuevo: Bitácora Digital QR y Geolocalización 📍
             </div>
             <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl md:text-7xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 leading-tight">
-              Abonos, Repuestos y Stock.<br />
-              <span className="text-primary">Todo en una sola App.</span>
+              El Sistema Operativo para<br />
+              <span className="text-primary">Empresas de Ascensores.</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-              La plataforma definitiva para empresas de ascensores. Facturación masiva de abonos, control de repuestos con fotos y alertas de Monotributo.
+              Digitalizá tu empresa de conservación. Abonos automáticos, control de técnicos por GPS, reportes con fotos y cumplimiento de normativas con QR.
             </p>
             <div className="flex flex-col sm:flex-row gap-5 w-full justify-center">
               <Link href="/register">
@@ -57,7 +57,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="mt-6 text-sm text-muted-foreground font-medium">
-              🔒 Sin tarjeta de crédito requerida • 15 días de prueba full
+              🔒 15 días de prueba sin cargo • Facturación AFIP integrada
             </p>
           </div>
 
@@ -69,42 +69,67 @@ export default function LandingPage() {
         <section className="py-24 bg-muted/20" id="features">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">Más que una planilla de cálculo</h2>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">Todo lo que tu empresa necesita</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Diseñamos cada herramienta pensando en los problemas reales de los mantenedores.
+                Diseñado exclusivamente para el gremio del transporte vertical.
               </p>
             </div>
 
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               <FeatureCard
+                icon={<QrCode className="h-8 w-8 text-blue-600" />}
+                title="Control de servicio por QR"
+                description="Tus clientes escanean e ingresan a una web pública moderna. Ven el estado del ascensor, foto del técnico y última visita."
+              />
+              <FeatureCard
                 icon={<Zap className="h-8 w-8 text-orange-500" />}
-                title="Facturación Recurrente"
-                description="Programá tus abonos mensuales. El sistema genera los borradores (mes vencido o en curso) y factura masivamente."
+                title="Facturación de Abonos"
+                description="Olvidate de facturar uno por uno. Generación masiva de facturas de mantenimiento mensual conectada directo a AFIP."
               />
               <FeatureCard
-                icon={<Building2 className="h-8 w-8 text-blue-500" />}
-                title="Gestión de Repuestos"
-                description="Control de stock con fotos reales. Subí imágenes desde tu celular, escaneá códigos QR y gestioná precios en segundos."
+                icon={<MapPin className="h-8 w-8 text-red-500" />}
+                title="Remitos digitales"
+                description="El sistema registra la ubicación GPS exacta y la hora al escanear el QR del equipo."
               />
               <FeatureCard
-                icon={<BarChart3 className="h-8 w-8 text-red-500" />}
-                title="Salud de Monotributo"
-                description="Semáforo fiscal en tiempo real. Controlá tu facturación de los últimos 12 meses y evitá pasarte de categoría."
+                icon={<Camera className="h-8 w-8 text-green-600" />}
+                title="Reportes con Fotos"
+                description="Historial de todos tus equipos, tus técnicos suben fotos de remitos fisicos, repuestos cambiado desde la App."
               />
               <FeatureCard
-                icon={<Edit className="h-8 w-8 text-green-500" />}
-                title="App de Técnicos"
-                description="Escaner de productos integrado. Tus técnicos pueden buscar repuestos, ver fotos y actualizar stock desde el ascensor."
+                icon={<Users className="h-8 w-8 text-indigo-500" />}
+                title="Confianza"
+                description="Perfil público con nombre y foto de tus técnicos. brindá seguridad a los vecinos del edificio."
               />
               <FeatureCard
-                icon={<ShieldCheck className="h-8 w-8 text-indigo-500" />}
-                title="Integración AFIP"
-                description="Facturas A, B y C autorizadas al instante con CAE y QR. Certificados digitales gestionados en la nube."
+                icon={<Building2 className="h-8 w-8 text-slate-700" />}
+                title="Gestión full de tu empresa"
+                description="Pone tu empresa en piloto automatico. Toda la gestion en un solo sitio."
+              />
+              <FeatureCard
+                icon={<Package className="h-8 w-8 text-amber-500" />}
+                title="Control de Stock"
+                description="Escanea y agrega productos a tu Stock median tu celular via Qr o codigo de barra."
               />
               <FeatureCard
                 icon={<Mail className="h-8 w-8 text-pink-500" />}
-                title="Base Unificada"
-                description="Administrá Consorcios, Particulares y Repuestos en un solo lugar. Importación masiva desde Excel."
+                title="Envío de facturas por correo"
+                description="Envio de facturas por correo personalizado. Automatizá la comunicación."
+              />
+              <FeatureCard
+                icon={<Edit className="h-8 w-8 text-cyan-500" />}
+                title="Edición rápida"
+                description="Edicion rapida de precios y clientes. Gestioná tu base de datos en segundos."
+              />
+              <FeatureCard
+                icon={<BarChart3 className="h-8 w-8 text-teal-600" />}
+                title="Reportes y Monotributo"
+                description="Gadget con reportes de facturacion, salud de tu monotributo."
+              />
+              <FeatureCard
+                icon={<TrendingUp className="h-8 w-8 text-rose-500" />}
+                title="Actualización por inflación"
+                description="Actualizacion masiva de abonos por inflacion con filtros mensuales, trimestrales, semestrales o anuales."
               />
             </div>
           </div>
@@ -115,9 +140,9 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/50 to-background -z-10" />
           <div className="container px-4 md:px-6">
             <div className="mx-auto max-w-2xl text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">Precio Simple y Transparente</h2>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">Inversión Inteligente</h2>
               <p className="text-lg text-muted-foreground">
-                Sin comisiones por factura ni costos ocultos.
+                Menos que el costo de un abono promedio. Recuperá tu tiempo.
               </p>
             </div>
 
@@ -128,22 +153,22 @@ export default function LandingPage() {
                 </div>
                 <div className="text-center space-y-4 mb-8">
                   <h3 className="text-2xl font-bold text-muted-foreground line-through decoration-red-500 decoration-2 opacity-70">
-                    $25.000 / mes
+                    $75.000
                   </h3>
                   <div className="flex items-center justify-center gap-1">
-                    <span className="text-6xl font-extrabold tracking-tight">$15.000</span>
+                    <span className="text-6xl font-extrabold tracking-tight">$50.000</span>
                     <span className="text-xl font-medium text-muted-foreground self-end mb-2">/mes</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">Precio final, para siempre.</p>
+                  <p className="text-sm text-muted-foreground">Final. Sin costos extra.</p>
                 </div>
 
                 <ul className="space-y-4 mb-8">
                   {[
-                    "Usuarios ilimitados",
-                    "Facturas ilimitadas",
-                    "Clientes ilimitados",
-                    "Soporte prioritario por WhatsApp",
-                    "Actualizaciones gratuitas"
+                    "Usuarios ilimitados (Admin y Técnicos)",
+                    "Equipos y Consorcios ilimitados",
+                    "Facturación ilimitada AFIP",
+                    "Módulo QR Digital Incluido",
+                    "Soporte Prioritario WhatsApp"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-base">
                       <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
@@ -155,20 +180,15 @@ export default function LandingPage() {
                 </ul>
                 <div className="pt-4">
                   <Link href="/register">
-                    <Button size="lg" variant="default">
+                    <Button size="lg" variant="default" className="w-full text-lg h-12">
                       Crear Cuenta Gratis
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                 </div>
 
-                <Link href="/register">
-                  <Button className="w-full h-12 text-lg font-bold shadow-lg" size="lg">
-                    Aprovechar Oferta Ahora
-                  </Button>
-                </Link>
                 <p className="mt-4 text-xs text-center text-muted-foreground">
-                  Garantía de satisfacción de 30 días.
+                  15 días de prueba gratis. Cancela cuando quieras.
                 </p>
               </div>
             </div>
@@ -180,15 +200,15 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
           <div className="container relative z-10 text-center px-4 max-w-3xl mx-auto">
             <h2 className="text-3xl font-bold tracking-tight sm:text-5xl mb-8">
-              Empieza hoy tu transformación digital
+              Llevá tu empresa al siguiente nivel
             </h2>
             <p className="text-xl text-primary-foreground/90 mb-10 max-w-2xl mx-auto">
-              Tus competidores ya están automatizando. No te quedes atrás gestionando papeles.
+              La tecnología que usan las grandes empresas, ahora a tu alcance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
                 <Button size="lg" variant="secondary" className="h-14 px-8 text-lg font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all w-full sm:w-auto">
-                  Crear Cuenta Gratis
+                  Registrarme Gratis
                 </Button>
               </Link>
             </div>
