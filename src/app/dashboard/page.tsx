@@ -55,26 +55,26 @@ export default async function DashboardPage() {
     const priceData = await getPriceChartData()
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             <AutoBillingNotifier />
             <PendingDraftsAlert count={metrics?.pendingDrafts || 0} />
             <PriceAlertsWidget />
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                <div className="flex items-center gap-2">
-                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+                <div className="grid grid-cols-2 md:flex md:items-center gap-2">
+                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white w-full md:w-auto text-xs md:text-sm h-12 md:h-10" asChild>
                         <Link href="/dashboard/billing/new">
-                            <Plus className="mr-2 h-4 w-4" /> Nueva Factura
+                            <Plus className="mr-1 md:mr-2 h-4 w-4" /> Nueva Factura
                         </Link>
                     </Button>
-                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
+                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white w-full md:w-auto text-xs md:text-sm h-12 md:h-10" asChild>
                         <Link href="/dashboard/billing/new?type=quote">
-                            <Plus className="mr-2 h-4 w-4" /> Nuevo Presupuesto
+                            <Plus className="mr-1 md:mr-2 h-4 w-4" /> Presupuesto
                         </Link>
                     </Button>
-                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white" asChild>
+                    <Button className="bg-[#0f172a] hover:bg-[#1e293b] text-white col-span-2 md:col-span-1 w-full md:w-auto text-xs md:text-sm h-12 md:h-10" asChild>
                         <Link href="/dashboard/clients/new">
-                            <Plus className="mr-2 h-4 w-4" /> Nuevo Edificio
+                            <Plus className="mr-1 md:mr-2 h-4 w-4" /> Nuevo Edificio
                         </Link>
                     </Button>
                 </div>
