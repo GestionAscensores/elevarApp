@@ -614,7 +614,10 @@ export async function getInvoices(filters?: {
     return db.invoice.findMany({
         where,
         include: { client: true, items: true, user: { select: { cuit: true } }, relatedInvoice: true },
-        orderBy: { date: 'desc' }
+        orderBy: [
+            { number: 'desc' },
+            { updatedAt: 'desc' }
+        ]
     })
 }
 

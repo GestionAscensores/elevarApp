@@ -14,6 +14,7 @@ import { ClientSearch } from '@/components/clients/client-search'
 import { ClientActions } from '@/components/clients/client-actions'
 import { ClientPriceCell } from '@/components/clients/client-price-cell'
 import { ClientNameCell } from '@/components/clients/client-name-cell'
+import { ClientNumberCell } from '@/components/clients/client-number-cell'
 import { ClientAddressCell } from '@/components/clients/client-address-cell'
 import { ClientFrequencyCell } from '@/components/clients/client-frequency-cell'
 import { toast } from 'sonner'
@@ -170,6 +171,7 @@ export function ClientList({ initialClients }: ClientListProps) {
                                         aria-label="Select all"
                                     />
                                 </TableHead>
+                                <TableHead className="w-[80px]">N°</TableHead>
                                 <TableHead>Edificio / Nombre</TableHead>
                                 <TableHead>Dirección</TableHead>
                                 <TableHead>Frecuencia de Actualización</TableHead>
@@ -197,6 +199,9 @@ export function ClientList({ initialClients }: ClientListProps) {
                                                     aria-label={`Select ${client.name}`}
                                                 />
                                             </TableCell>
+                                            <TableCell>
+                                                <ClientNumberCell clientId={client.id} initialNumber={client.clientNumber} />
+                                            </TableCell>
                                             <TableCell className="font-medium">
                                                 <div className="flex items-center gap-2">
                                                     <ClientNameCell clientId={client.id} initialName={client.name} />
@@ -223,6 +228,6 @@ export function ClientList({ initialClients }: ClientListProps) {
                     </Table>
                 </div>
             </CardContent>
-        </Card>
+        </Card >
     )
 }

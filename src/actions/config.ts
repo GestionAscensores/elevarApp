@@ -21,8 +21,12 @@ const ConfigSchema = z.object({
 })
 
 export async function updateConfig(prevState: any, formData: FormData) {
+    console.log("[Config] Action started. Verifying session...")
     const session = await verifySession()
-    if (!session) return { message: 'No autorizado' }
+    if (!session) {
+        console.log("[Config] Session verification failed.")
+        return { message: 'No autorizado' }
+    }
 
     // Manual handling for file uploads or text input
     // Assuming user pastes content for now or simple file read on client
@@ -52,14 +56,31 @@ export async function updateConfig(prevState: any, formData: FormData) {
 
     // Only update if not null/undefined to avoid overwriting with empty
     // But empty strings might be intentional clearing? Let's allow strings.
+    // Debug incoming values
+    try {
+        const fs = require('fs')
+        console.log("Current working directory:", process.cwd());
+        const logPath = process.cwd() + '/debug-config.log'
+        const logMsg = `[${new Date().toISOString()}] User: ${session.userId} | Subject: "${emailSubject}" | Body Len: ${emailBody?.length}\n`
+        fs.appendFileSync(logPath, logMsg)
+    } catch (e) {
+        console.error("Log error", e)
+    }
+
+    console.log(`[Config Update] User: ${session.userId}`)
+    console.log(`[Config Update] Subject: "${emailSubject}"`)
+    console.log(`[Config Update] Body Length: ${emailBody?.length}`)
+
     updateData.businessName = businessName
     updateData.businessAddress = businessAddress
     updateData.businessPhone = businessPhone
     updateData.businessEmail = email // Map the form 'email' field to businessEmail in config
     updateData.logoUrl = logoUrl
     updateData.fantasyName = fantasyName
-    updateData.emailSubject = emailSubject
-    updateData.emailBody = emailBody
+
+    // Convert empty strings to null to ensure default templates can work if needed
+    updateData.emailSubject = (!emailSubject || emailSubject.trim() === '') ? null : emailSubject
+    updateData.emailBody = (!emailBody || emailBody.trim() === '') ? null : emailBody
 
     // Auto Billing
     const autoBillingEnabled = formData.get('autoBillingEnabled') === 'on'

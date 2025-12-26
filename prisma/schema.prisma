@@ -78,6 +78,7 @@ model Client {
   ivaCondition          String
   email                 String?
   phone                 String?
+  clientNumber          Int?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
   docType               String            @default("80")

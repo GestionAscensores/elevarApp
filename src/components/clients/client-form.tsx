@@ -104,6 +104,11 @@ export function ClientForm() {
                 <form action={action} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
+                            <Label htmlFor="clientNumber">N° de Cliente</Label>
+                            <Input id="clientNumber" name="clientNumber" type="number" placeholder="Ej: 123" />
+                        </div>
+
+                        <div className="space-y-2">
                             <Label htmlFor="name">Nombre / Edificio</Label>
                             <Input id="name" name="name" placeholder="Ej. Consorcio Av. Libertador 1234" required />
                             {state?.errors?.name && <p className="text-sm text-red-500">{state.errors.name}</p>}

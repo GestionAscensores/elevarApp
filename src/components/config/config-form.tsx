@@ -333,10 +333,10 @@ export function ConfigForm({ initialConfig, userRole }: { initialConfig: any; us
                                         id="emailBody"
                                         name="emailBody"
                                         defaultValue={initialConfig?.emailBody || ''}
-                                        placeholder={`Se adjunta comprobantes por mantenimiento Asc. correspondiente al mes de {{mes}}.\n\nSaludos cordiales.`}
+                                        placeholder={`Se adjunta factura por, {{detalle}}.\nAtte\n{{empresa}}`}
                                         className="h-32"
                                     />
-                                    <p className="text-xs text-muted-foreground">Variables disponibles: {"{{numero}}"}, {"{{cliente}}"}, {"{{mes}}"}</p>
+                                    <p className="text-xs text-muted-foreground">Variables disponibles: {"{{numero}}"}, {"{{cliente}}"}, {"{{mes}}"}, {"{{detalle}}"}, {"{{empresa}}"}</p>
                                 </div>
                             </div>
                         </div>

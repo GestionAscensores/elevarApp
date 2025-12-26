@@ -18,6 +18,7 @@ const ClientSchema = z.object({
     priceUpdateFrequency: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY', 'SEMIANNUAL', 'NO']).optional().default('MONTHLY'),
     lastPriceUpdate: z.string().optional(),
     items: z.string().optional(),
+    clientNumber: z.coerce.number().optional(), // Coerce from string if form data
 })
 
 export async function getClients(query?: string) {
@@ -36,10 +37,36 @@ export async function getClients(query?: string) {
     const clients = await db.client.findMany({
         where,
         include: { items: true },
-        orderBy: { name: 'asc' }
+        orderBy: [
+            { clientNumber: 'asc' },
+            { name: 'asc' }
+        ]
     })
 
     return clients
+}
+
+// ... existing actions ...
+
+export async function updateClientNumber(clientId: string, newNumber: number | null) {
+    const session = await verifySession()
+    if (!session) return { message: 'No autorizado' }
+
+    try {
+        await db.client.update({
+            where: {
+                id: clientId,
+                userId: session.userId
+            },
+            data: { clientNumber: newNumber }
+        })
+
+        revalidatePath('/dashboard/clients')
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error updating client number:", error)
+        return { success: false, message: error.message }
+    }
 }
 
 export async function createClient(prevState: any, formData: FormData) {
@@ -86,7 +113,8 @@ export async function createClient(prevState: any, formData: FormData) {
                         quantity: Number(item.quantity),
                         price: Number(item.price)
                     }))
-                }
+                },
+                clientNumber: result.data.clientNumber || null,
             }
         })
         revalidatePath('/dashboard/clients')
@@ -185,6 +213,7 @@ export async function updateClient(prevState: any, formData: FormData) {
                     phone: result.data.phone,
                     priceUpdateFrequency: result.data.priceUpdateFrequency,
                     lastPriceUpdate: lastPriceUpdateDate,
+                    clientNumber: result.data.clientNumber || null,
                 }
             })
 
