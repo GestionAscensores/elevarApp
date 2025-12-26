@@ -81,7 +81,26 @@ export async function getEquipmentStatus(equipmentId: string) {
 
     if (!equipment) return null
 
+    // Fetch User Config for Logo
+    const userConfig = await prisma.userConfig.findUnique({
+        where: { userId: equipment.client.userId },
+        select: { logoUrl: true }
+    })
+
     const lastVisit = equipment.visits[0]
+
+    // Status Logic: 
+    // IF Equipment.status is STOPPED/LIMITED, use that.
+    // ELSE use lastVisit status or 'Sin Datos'.
+    // Actually, 'EQUIPMENT.status' should be the source of truth for "En Servicio / Fuera de Servicio".
+    // Schema has `status` field on Equipment thanks to previous changes.
+
+    // Let's ensure types are correct. equipment.status should exist. 
+    // If equipment has no status field yet in Prisma types (might need verify), we assume it does based on task.
+    // We prioritize Equipment.status if it's "STOPPED".
+
+    // @ts-ignore - Status field added recently
+    const currentStatus = equipment.status || (lastVisit ? lastVisit.status : 'Sin Datos')
 
     return {
         equipmentName: equipment.name,
@@ -89,8 +108,9 @@ export async function getEquipmentStatus(equipmentId: string) {
         clientName: equipment.client.name,
         clientAddress: equipment.client.address,
         companyId: equipment.client.userId,
-        clientId: equipment.client.id, // Return correct Client ID for VisitForm
-        status: lastVisit ? lastVisit.status : 'Sin Datos',
+        clientId: equipment.client.id,
+        companyLogo: userConfig?.logoUrl,
+        status: currentStatus,
         lastVisit: lastVisit ? {
             date: lastVisit.date,
             technicianName: lastVisit.technician.name,

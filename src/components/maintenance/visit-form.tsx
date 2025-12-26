@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label'
 import { registerVisit } from '@/actions/maintenance'
 import { createTask } from '@/actions/tasks'
 import { toast } from 'sonner'
-import { MapPin, Camera, Loader2, Send, AlertTriangle, X } from 'lucide-react'
+import { MapPin, Camera, Loader2, Send, AlertTriangle, X, CheckSquare } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 
 interface VisitFormProps {
     clientId: string
@@ -20,6 +21,12 @@ interface VisitFormProps {
     equipmentId?: string
 }
 
+const PRESET_PHRASES = [
+    "Tareas de mantenimiento realizadas, todo normal al día de la fecha.",
+    "Tareas de mantenimiento realizadas - Apto para uso, con preventivas pendientes.",
+    "Se recomienda realizar las reparaciones informadas con la mayor brevedad posible."
+]
+
 export function VisitForm({ clientId, technicianId, technicianName, onSuccess, onCancel, equipmentId }: VisitFormProps) {
     const [loading, setLoading] = useState(false)
     const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null)
@@ -27,6 +34,7 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
     const [proof, setProof] = useState<string | null>(null)
     const [addTask, setAddTask] = useState(false)
     const [outOfService, setOutOfService] = useState(false)
+    const [publicNote, setPublicNote] = useState("") // Controlled state
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -53,8 +61,6 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
         if (file) {
             const reader = new FileReader()
             reader.onloadend = () => {
-                // Simple client-side compression could go here if needed
-                // For now, we assume reasonable sizes or accept the base64 string
                 setProof(reader.result as string)
             }
             reader.readAsDataURL(file)
@@ -64,7 +70,7 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
     async function handleSubmit(formData: FormData) {
         setLoading(true)
 
-        const publicNotes = formData.get('publicNotes') as string
+        // Use controlled publicNote
         const privateNotes = formData.get('privateNotes') as string
 
         // 1. Register Visit
@@ -72,7 +78,7 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
             clientId,
             technicianId,
             type: 'Rutina',
-            publicNotes,
+            publicNotes: publicNote,
             privateNotes,
             locationLat: location?.lat,
             locationLng: location?.lng,
@@ -125,19 +131,38 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
                         ) : (
                             <span className="text-orange-700">{geoError || 'Obteniendo ubicación...'}</span>
                         )}
-                        {location && (
-                            <input type="hidden" name="lat" value={location.lat} />
-                        )}
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="publicNotes">Mensaje para el Consorcio (Público)</Label>
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <Label htmlFor="publicNotes">Mensaje para el Consorcio {outOfService && <span className="text-xs font-normal text-muted-foreground">(Opcional si está fuera de servicio)</span>}</Label>
+
+                        </div>
+
+                        {/* Preset Phrases */}
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            <Select onValueChange={(val) => setPublicNote(val)}>
+                                <SelectTrigger className="h-8 text-xs bg-blue-50 border-blue-200 text-blue-800 w-full">
+                                    <SelectValue placeholder="✨ Frases Rápidas..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {PRESET_PHRASES.map((phrase, i) => (
+                                        <SelectItem key={i} value={phrase} className="text-xs">
+                                            {phrase.substring(0, 50)}...
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
                         <Textarea
                             id="publicNotes"
                             name="publicNotes"
+                            value={publicNote}
+                            onChange={(e) => setPublicNote(e.target.value)}
                             placeholder="Ej: Service mensual realizado. Todo en orden."
                             className="resize-none"
-                            required
+                            required={!outOfService} // Optional if out of service
                         />
                     </div>
 
@@ -161,14 +186,14 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
                         </div>
                     )}
 
-                    {/* Pending Task Section */}
+                    {/* Pending Task Section (Renamed) */}
                     <div className="border rounded-lg p-4 bg-orange-50/50 space-y-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                                <CheckSquare className="h-5 w-5 text-orange-600" />
                                 <div className="space-y-0.5">
-                                    <Label className="text-base font-semibold text-orange-900 cursor-pointer" onClick={() => setAddTask(!addTask)}>¿Detectó fallas?</Label>
-                                    <p className="text-xs text-orange-700">Registrar tarea pendiente</p>
+                                    <Label className="text-base font-semibold text-orange-900 cursor-pointer" onClick={() => setAddTask(!addTask)}>Agregar tareas pendientes</Label>
+                                    <p className="text-xs text-orange-700">Registrar reparación necesaria</p>
                                 </div>
                             </div>
                             <Switch checked={addTask} onCheckedChange={setAddTask} />
@@ -177,11 +202,11 @@ export function VisitForm({ clientId, technicianId, technicianName, onSuccess, o
                         {addTask && (
                             <div className="space-y-4 pt-2 animate-in slide-in-from-top-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="taskDescription">Descripción del Problema</Label>
+                                    <Label htmlFor="taskDescription">Descripción del Trabajo Pendiente</Label>
                                     <Textarea
                                         id="taskDescription"
                                         name="taskDescription"
-                                        placeholder="Ej: Ruido en cuarto de máquinas..."
+                                        placeholder="Ej: Necesita reemplazo cinta de frenos..."
                                         required={addTask}
                                         className="bg-white"
                                     />
