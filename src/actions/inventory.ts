@@ -45,6 +45,25 @@ export async function updateProductStock(id: string, delta: number) {
     }
 }
 
+export async function updateProductImage(id: string, base64Image: string) {
+    const session = await verifySession()
+    if (!session) return { error: 'No autorizado' }
+
+    try {
+        await db.product.update({
+            where: { id, userId: session.userId },
+            data: {
+                imageUrl: base64Image
+            }
+        })
+        revalidatePath('/dashboard/inventory/scan')
+        return { success: true }
+    } catch (error) {
+        console.error('Error updating image:', error)
+        return { error: 'Error al guardar imagen' }
+    }
+}
+
 export async function setProductBarcode(id: string, barcode: string) {
     const session = await verifySession()
     if (!session) return { error: 'No autorizado' }

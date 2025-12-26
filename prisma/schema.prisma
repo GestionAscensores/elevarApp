@@ -114,6 +114,7 @@ model Product {
   price        Decimal       @db.Decimal(10, 2)
   stock        Int           @default(0)
   barcode      String?       @unique
+  imageUrl     String?       @db.Text
   currency     String        @default("ARS")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

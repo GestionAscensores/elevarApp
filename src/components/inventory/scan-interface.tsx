@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode'
-import { getProductByBarcode, updateProductStock, setProductBarcode } from '@/actions/inventory'
+import { getProductByBarcode, updateProductStock, setProductBarcode, updateProductImage } from '@/actions/inventory'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from 'sonner'
-import { Loader2, Plus, Minus, RefreshCw, Barcode } from 'lucide-react'
+import { Loader2, Plus, Minus, RefreshCw, Barcode, Camera } from 'lucide-react'
 
 // Define the scanner instance type loosely or use `any` if types are tricky with the library import
 // We'll import dynamically or just use standard import if `npm i` finished.
@@ -111,6 +111,62 @@ export function ScanInterface() {
         // Effect will re-init scanner
     }
 
+    const [imageLoading, setImageLoading] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !product) return
+
+        setImageLoading(true)
+        const reader = new FileReader()
+        reader.onload = (event) => {
+            const img = new Image()
+            img.onload = () => {
+                const canvas = document.createElement('canvas')
+                const MAX_WIDTH = 800
+                const MAX_HEIGHT = 800
+                let width = img.width
+                let height = img.height
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width
+                        width = MAX_WIDTH
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height
+                        height = MAX_HEIGHT
+                    }
+                }
+
+                canvas.width = width
+                canvas.height = height
+                const ctx = canvas.getContext('2d')
+                ctx?.drawImage(img, 0, 0, width, height)
+
+                // Compress to JPEG 0.7
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
+                saveImage(dataUrl)
+            }
+            img.src = event.target?.result as string
+        }
+        reader.readAsDataURL(file)
+    }
+
+    const saveImage = async (base64: string) => {
+        if (!product) return
+        const result = await updateProductImage(product.id, base64)
+        setImageLoading(false)
+        if (result.success) {
+            toast.success("Imagen guardada")
+            setProduct({ ...product, imageUrl: base64 })
+        } else {
+            toast.error(result.error)
+        }
+    }
+
     return (
         <div className="flex flex-col gap-4 max-w-md mx-auto p-2">
             {!scannedCode && (
@@ -150,8 +206,36 @@ export function ScanInterface() {
             )}
 
             {product && (
-                <Card className="border-green-200">
-                    <CardHeader className="bg-green-50 rounded-t-lg">
+                <Card className="border-green-200 overflow-hidden">
+                    <div className="relative h-48 bg-slate-100 flex items-center justify-center">
+                        {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="text-slate-400 flex flex-col items-center">
+                                <Camera className="h-12 w-12 mb-2 opacity-50" />
+                                <span className="text-sm">Sin imagen</span>
+                            </div>
+                        )}
+
+                        <Button
+                            size="icon"
+                            className="absolute bottom-4 right-4 rounded-full shadow-lg"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={imageLoading}
+                        >
+                            {imageLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                        </Button>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleImageUpload}
+                        />
+                    </div>
+
+                    <CardHeader className="bg-green-50">
                         <CardTitle className="text-green-900 flex justify-between items-start">
                             <span>{product.name}</span>
                             <span className="text-sm font-normal bg-white px-2 py-1 rounded border border-green-200">
@@ -205,6 +289,6 @@ export function ScanInterface() {
                     </CardFooter>
                 </Card>
             )}
-        </div>
+        </div >
     )
 }
