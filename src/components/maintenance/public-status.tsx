@@ -145,45 +145,41 @@ export function PublicStatus({ clientName, status, lastVisit, companyLogo, histo
                                     onClick={() => setShowHistory(!showHistory)}
                                 >
                                     <History className="h-4 w-4" />
-                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial de Visitas (Click aquí)'}
+                                    {showHistory ? 'Ocultar Historial' : 'Ver Historial de Visitas'}
                                     {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 </Button>
                             )}
+
+                            {/* 4. History List (Inside Card) */}
+                            {history && history.length > 0 && showHistory && (
+                                <div className="pt-4 border-t mt-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
+                                    <h4 className="font-semibold text-sm text-muted-foreground mb-2">Historial Reciente</h4>
+                                    {history.map((visit) => (
+                                        <div key={visit.id} className="flex gap-4 p-3 bg-slate-50 rounded-lg border">
+                                            <div className="h-8 w-8 rounded-full bg-white border flex-shrink-0 overflow-hidden">
+                                                {visit.technicianAvatar ? (
+                                                    <Image src={visit.technicianAvatar} alt={visit.technicianName} width={32} height={32} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="h-4 w-4 text-gray-400 m-auto" />
+                                                )}
+                                            </div>
+                                            <div className="space-y-1 flex-1">
+                                                <div className="flex justify-between items-start">
+                                                    <p className="font-medium text-sm">{visit.technicianName}</p>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {new Date(visit.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                                {visit.publicNotes && (
+                                                    <p className="text-xs text-gray-600 line-clamp-2 italic">"{visit.publicNotes}"</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
-                )}
-
-                {/* Debug Marker (remove later) */}
-                {/* <div className="text-xs text-gray-300 text-center">v0.1.9 - Cached: {new Date().toISOString()}</div> */}
-
-                {/* 4. History (Past 5 Visits) - Collapsible */}
-                {history && history.length > 0 && showHistory && (
-                    <div className="space-y-4 animate-in slide-in-from-top-4 fade-in duration-300">
-                        {history.map((visit) => (
-                            <Card key={visit.id} className="border shadow-sm">
-                                <CardContent className="p-4 flex gap-4">
-                                    <div className="h-10 w-10 rounded-full bg-gray-100 flex-shrink-0 overflow-hidden">
-                                        {visit.technicianAvatar ? (
-                                            <Image src={visit.technicianAvatar} alt={visit.technicianName} width={40} height={40} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <User className="h-5 w-5 text-gray-400 m-auto" />
-                                        )}
-                                    </div>
-                                    <div className="space-y-1 flex-1">
-                                        <div className="flex justify-between items-start">
-                                            <p className="font-medium text-sm">{visit.technicianName}</p>
-                                            <span className="text-xs text-muted-foreground">
-                                                {new Date(visit.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                        {visit.publicNotes && (
-                                            <p className="text-sm text-gray-600 line-clamp-2">"{visit.publicNotes}"</p>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
                 )}
             </div>
         </div>
