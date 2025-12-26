@@ -1,57 +1,14 @@
-'use client'
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { TrendingUp, Info, RefreshCw } from "lucide-react"
-import { useEffect, useState } from "react"
-import { Skeleton } from "@/components/ui/skeleton"
+import { TrendingUp, Info } from "lucide-react"
+import { getIndecInflation } from "@/actions/external"
 
-export function InflationWidget() {
-    const [data, setData] = useState<{ date: string, value: number } | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(false)
+export async function InflationWidget() {
+    // Correctly await the server action
+    const data = await getIndecInflation()
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Fetch directly from client browser to avoid Vercel IP blocks
-                const res = await fetch('https://apis.datos.gob.ar/series/api/series/?ids=145.3_INGNACUAL_DICI_M_38&limit=1&sort=-indice_tiempo&format=json')
-                if (!res.ok) throw new Error('Network error')
-
-                const json = await res.json()
-                if (json.data && json.data.length > 0) {
-                    const [date, value] = json.data[0]
-                    setData({ date, value: Number(value) })
-                } else {
-                    setError(true)
-                }
-            } catch (e) {
-                console.error("Client Fetch Error:", e)
-                setError(true)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchData()
-    }, [])
-
-    if (loading) {
-        return (
-            <Card className="col-span-full md:col-span-2 lg:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-blue-800 flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" /> Inflación (IPC)
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Skeleton className="h-8 w-1/2 mb-2" />
-                    <Skeleton className="h-4 w-3/4" />
-                </CardContent>
-            </Card>
-        )
-    }
-
-    if (error || !data) {
+    // Since we handle errors in the action with a fallback, data should rarely be null.
+    // But if it is, we show a graceful error.
+    if (!data) {
         return (
             <Card className="col-span-full md:col-span-2 lg:col-span-2 border-red-200 shadow-sm relative overflow-hidden group bg-red-50/30">
                 <CardHeader className="pb-2">
@@ -60,37 +17,41 @@ export function InflationWidget() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="text-center py-4">
-                    <span className="text-xl font-bold text-red-400">Error</span>
-                    <p className="text-xs text-red-400 mt-1">No se pudo cargar</p>
+                    <span className="text-xl font-bold text-red-400">Offline</span>
                 </CardContent>
             </Card>
         )
     }
 
+    // Determine color based on value (Just for fun UI touch)
+    // > 10% red, > 5% orange, < 5% blue
+    const themeColor = data.value > 10 ? 'red' : (data.value > 5 ? 'orange' : 'blue')
+    const borderColor = `border-${themeColor}-200`
+    const textColor = `text-${themeColor}-600`
+    const bgGradient = `from-${themeColor}-50/50 via-white to-gray-50/20`
+
     // Format date "2024-11-01" -> "Noviembre 2024"
     const dateObj = new Date(data.date)
-    // Fix timezone offset for display if needed, but usually 'date' string is ISO date part.
-    // Ensure accurate month display by treating as UTC or appending time
     const monthName = dateObj.toLocaleDateString('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
     const displayMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1)
 
     return (
-        <Card className="col-span-full md:col-span-2 lg:col-span-2 border-blue-200 shadow-sm relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/20" />
+        <Card className={`col-span-full md:col-span-2 lg:col-span-2 ${borderColor} shadow-sm relative overflow-hidden group border`}>
+            <div className={`absolute inset-0 bg-gradient-to-br ${bgGradient}`} />
 
             <CardHeader className="pb-2 relative relative z-10">
                 <div className="flex justify-between items-start">
-                    <CardTitle className="text-sm font-medium text-blue-900 flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" /> Inflación Mensual
+                    <CardTitle className={`text-sm font-medium flex items-center gap-2 text-slate-800`}>
+                        <TrendingUp className={`h-4 w-4 ${textColor}`} /> Inflación (IPC)
                     </CardTitle>
-                    <div className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded font-bold">
-                        OFICIAL
+                    <div className="bg-white/80 backdrop-blur text-slate-600 text-[10px] px-1.5 py-0.5 rounded border shadow-sm font-medium">
+                        MENSUAL
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="relative z-10 text-center py-4">
                 <div className="flex flex-col items-center justify-center">
-                    <span className="text-4xl font-extrabold text-blue-600 tracking-tight">
+                    <span className={`text-4xl font-extrabold ${textColor} tracking-tight`}>
                         {data.value.toFixed(1)}%
                     </span>
                     <span className="text-xs text-muted-foreground font-medium mt-1">
@@ -98,9 +59,9 @@ export function InflationWidget() {
                     </span>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-blue-100 flex items-center justify-center gap-1.5 text-[10px] text-blue-400">
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
                     <Info className="h-3 w-3" />
-                    Fuente: INDEC (API Series de Tiempo)
+                    {data.error ? "Datos estimados (Oficial Offline)" : "Fuente: INDEC Oficial"}
                 </div>
             </CardContent>
         </Card>
