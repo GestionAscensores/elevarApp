@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { deleteClients, toggleClientStatus } from '@/actions/clients'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Trash2, Power } from 'lucide-react'
@@ -160,7 +160,64 @@ export function ClientList({ initialClients }: ClientListProps) {
                     <ClientSearch />
                 </div>
 
-                <div className="rounded-md border">
+                {/* Mobile View */}
+                <div className="md:hidden space-y-4">
+                    {filteredClients.length === 0 ? (
+                        <div className="text-center p-8 text-muted-foreground border rounded-lg bg-muted/20">
+                            No hay clientes {filterStatus === 'active' ? 'activos' : filterStatus === 'inactive' ? 'inactivos' : ''} registrados.
+                        </div>
+                    ) : (
+                        filteredClients.map((client: any) => {
+                            const totalAbono = client.items?.reduce((acc: number, item: any) => acc + (Number(item.price) * Number(item.quantity)), 0) || 0;
+                            const isSelected = selectedClients.includes(client.id)
+                            return (
+                                <Card key={client.id} className={isSelected ? 'ring-2 ring-primary border-primary' : ''}>
+                                    <CardHeader className="p-4 pb-2 flex flex-row items-start gap-3 space-y-0">
+                                        <Checkbox
+                                            checked={isSelected}
+                                            onCheckedChange={(checked) => handleSelectOne(checked as boolean, client.id)}
+                                            className="mt-1"
+                                        />
+                                        <div className="flex-1 overflow-hidden">
+                                            <div className="flex justify-between items-start gap-2">
+                                                <div className="font-bold text-base truncate pr-2">
+                                                    {client.name}
+                                                    <span className="ml-2 text-xs font-normal text-muted-foreground">#{client.clientNumber || '-'}</span>
+                                                </div>
+                                                {!client.isActive && (
+                                                    <span className="shrink-0 text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                                                        Inactivo
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground truncate">{client.address || 'Sin dirección'}</p>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="p-4 py-2 text-sm grid grid-cols-2 gap-2">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">Frecuencia</p>
+                                            <p className="font-medium">
+                                                {client.priceUpdateFrequency === 'MONTHLY' ? 'Mensual' :
+                                                    client.priceUpdateFrequency === 'QUARTERLY' ? 'Trimestral' :
+                                                        client.priceUpdateFrequency}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs text-muted-foreground">Total Abono</p>
+                                            <p className="font-bold text-base">${totalAbono.toFixed(2)}</p>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="p-2 bg-muted/30 flex justify-end border-t">
+                                        <ClientActions id={client.id} />
+                                    </CardFooter>
+                                </Card>
+                            )
+                        })
+                    )}
+                </div>
+
+                {/* Desktop View */}
+                <div className="hidden md:block rounded-md border">
                     <Table>
                         <TableHeader>
                             <TableRow>

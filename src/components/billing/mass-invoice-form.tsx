@@ -112,40 +112,77 @@ export function MassInvoiceForm({ clients }: Props) {
                     </CardHeader>
                     <CardContent>
                         <div className="rounded-md border max-h-[500px] overflow-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-[50px]">
-                                            <Checkbox
-                                                checked={clients.length > 0 && selectedClients.length === clients.length}
-                                                onCheckedChange={toggleAll}
-                                            />
-                                        </TableHead>
-                                        <TableHead>Cliente</TableHead>
-                                        <TableHead>CUIT</TableHead>
-                                        <TableHead className="text-right">Abono Actual</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {clients.map(client => (
-                                        <TableRow key={client.id}>
-                                            <TableCell>
+                            {/* Mobile List View */}
+                            <div className="md:hidden space-y-2">
+                                <div className="flex items-center gap-2 pb-2 border-b mb-2">
+                                    <Checkbox
+                                        checked={clients.length > 0 && selectedClients.length === clients.length}
+                                        onCheckedChange={toggleAll}
+                                        id="select-all-mobile"
+                                    />
+                                    <Label htmlFor="select-all-mobile" className="font-medium">Seleccionar Todos ({clients.length})</Label>
+                                </div>
+                                {clients.map(client => (
+                                    <div
+                                        key={client.id}
+                                        className={`flex items-start gap-3 p-3 border rounded-md transition-colors cursor-pointer ${selectedClients.includes(client.id) ? 'bg-blue-50 border-blue-200' : 'hover:bg-muted/50'}`}
+                                        onClick={() => toggleClient(client.id)}
+                                    >
+                                        <Checkbox
+                                            checked={selectedClients.includes(client.id)}
+                                            onCheckedChange={() => toggleClient(client.id)}
+                                            className="mt-1"
+                                        />
+                                        <div className="flex-1">
+                                            <div className="font-medium">{client.name}</div>
+                                            <div className="text-xs text-muted-foreground">CUIT: {client.cuit}</div>
+                                        </div>
+                                        <div className="text-right font-bold text-sm">
+                                            {client.items && client.items.length > 0
+                                                ? `$${client.items.reduce((acc: number, i: any) => acc + (i.quantity * i.price), 0).toFixed(2)}`
+                                                : '$0.00'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Desktop Table View */}
+                            <div className="hidden md:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[50px]">
                                                 <Checkbox
-                                                    checked={selectedClients.includes(client.id)}
-                                                    onCheckedChange={() => toggleClient(client.id)}
+                                                    checked={clients.length > 0 && selectedClients.length === clients.length}
+                                                    onCheckedChange={toggleAll}
                                                 />
-                                            </TableCell>
-                                            <TableCell className="font-medium">{client.name}</TableCell>
-                                            <TableCell>{client.cuit}</TableCell>
-                                            <TableCell className="text-right">
-                                                {client.items && client.items.length > 0
-                                                    ? `$${client.items.reduce((acc: number, i: any) => acc + (i.quantity * i.price), 0).toFixed(2)}`
-                                                    : '$0.00'}
-                                            </TableCell>
+                                            </TableHead>
+                                            <TableHead>Cliente</TableHead>
+                                            <TableHead>CUIT</TableHead>
+                                            <TableHead className="text-right">Abono Actual</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {clients.map(client => (
+                                            <TableRow key={client.id}>
+                                                <TableCell>
+                                                    <Checkbox
+                                                        checked={selectedClients.includes(client.id)}
+                                                        onCheckedChange={() => toggleClient(client.id)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="font-medium">{client.name}</TableCell>
+                                                <TableCell>{client.cuit}</TableCell>
+                                                <TableCell className="text-right">
+                                                    {client.items && client.items.length > 0
+                                                        ? `$${client.items.reduce((acc: number, i: any) => acc + (i.quantity * i.price), 0).toFixed(2)}`
+                                                        : '$0.00'}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

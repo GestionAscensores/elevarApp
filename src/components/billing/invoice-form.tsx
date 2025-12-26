@@ -18,17 +18,17 @@ import { CreateProductDialog } from '@/components/products/create-product-dialog
 function FormButtons() {
     const { pending } = useFormStatus()
     return (
-        <div className="flex w-full justify-end gap-3">
-            <Button variant="outline" type="submit" name="_action" value="save_quote" disabled={pending}>
+        <div className="flex flex-col sm:flex-row w-full justify-end gap-3">
+            <Button variant="outline" type="submit" name="_action" value="save_quote" disabled={pending} className="w-full sm:w-auto">
                 {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {!pending && <FileText className="mr-2 h-4 w-4" />}
                 Guardar Presupuesto
             </Button>
-            <Button variant="outline" type="submit" name="_action" value="save_draft" disabled={pending}>
+            <Button variant="outline" type="submit" name="_action" value="save_draft" disabled={pending} className="w-full sm:w-auto">
                 {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Guardar Borrador
             </Button>
-            <Button type="submit" name="_action" value="emit" disabled={pending}>
+            <Button type="submit" name="_action" value="emit" disabled={pending} className="w-full sm:w-auto">
                 {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Emitir Factura
             </Button>
