@@ -92,7 +92,7 @@ export async function createSubscriptionPreference() {
                     }
                 ],
                 back_urls: {
-                    success: `${appUrl}/dashboard`,
+                    success: `${appUrl}/dashboard/payment/success`,
                     failure: `${appUrl}/dashboard/subscription`,
                     pending: `${appUrl}/dashboard/subscription`
                 },

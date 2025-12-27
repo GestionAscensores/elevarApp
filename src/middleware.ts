@@ -58,7 +58,7 @@ export default auth(async (req) => {
     if (path.startsWith("/dashboard") && (token || customSession)) {
 
         // Exception: Allow access to the subscription page itself to avoid infinite loops
-        if (path === "/dashboard/subscription" || path.startsWith("/dashboard/subscription/")) {
+        if (path === "/dashboard/subscription" || path.startsWith("/dashboard/subscription/") || path.startsWith("/dashboard/payment/success")) {
             return NextResponse.next()
         }
 
