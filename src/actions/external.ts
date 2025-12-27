@@ -36,13 +36,16 @@ export async function getIndecInflation(): Promise<InflationData | null> {
 
         throw new Error("Empty data")
     } catch (e) {
-        console.error("INDEC API Error:", e)
-        // Fallback: Return 2.7% (Nov 2024 Reference) to UI if connection fails
-        // This avoids breaking the layout
+        console.warn("INDEC API Warning (Using Fallback):", e instanceof Error ? e.message : e)
+
+        // Fallback: Use previous month date context for reference data
+        const lastMonth = new Date()
+        lastMonth.setMonth(lastMonth.getMonth() - 1)
+
         return {
-            date: new Date().toISOString(),
+            date: lastMonth.toISOString(),
             value: 2.7,
-            error: "Datos de respaldo (API Bloqueada)"
+            error: "Datos de respaldo (API Offline)"
         }
     }
 }
