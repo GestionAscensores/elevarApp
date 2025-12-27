@@ -51,14 +51,14 @@ export function PricingConfig({ currentPrice }: PricingConfigProps) {
                             onChange={(e) => setPrice(Number(e.target.value))}
                         />
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                         Este cambio impactará inmediatamente en:
                         <ul className="list-disc ml-4 mt-1">
                             <li>Landing Page (Oferta)</li>
                             <li>Checkout de Mercado Pago</li>
                             <li>Pantalla de renovación</li>
                         </ul>
-                    </p>
+                    </div>
                 </div>
             </CardContent>
             <CardFooter>

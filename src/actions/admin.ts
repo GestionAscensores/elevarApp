@@ -18,7 +18,9 @@ export async function getAdminMetrics() {
             activeSubs,
             verifiedUsers,
             totalInvoices,
-            totalRevenue
+            totalRevenue,
+            platformRev,
+            priceSetting
         ] = await Promise.all([
             // 1. Total Users
             db.user.count(),
