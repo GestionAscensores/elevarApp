@@ -75,12 +75,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ...authConfig.callbacks,
         async signIn({ user, account, profile }) {
             // Check if user is active (for OAuth specifically, though authorizes covers credentials)
-            // 1. Initial Sign In
-            if (user) {
-                token.sub = user.id
-                token.role = user.role
-                token.subscriptionStatus = user.subscriptionStatus
-                // ... (keep existing logic) ...
+
+            if (user.email) {
+                const dbUser = await db.user.findUnique({
+                    where: { email: user.email },
+                    select: { isActive: true }
+                })
+
+                if (dbUser && !dbUser.isActive) {
+                    return false // Deny login
+                }
+            }
+
+            // GUARDIAN: Prevent accidental linking of hsascensores to amilcarserra
+            // This happens if the admin is logged in and tries to "sign up" with the new google account
+            // NextAuth tries to link them. We want to FORCE a separate account.
+            if (
+                account?.provider === 'google' &&
+                profile?.email === 'hsascensores@gmail.com' &&
+                user.email === 'amilcarserra@gmail.com'
+            ) {
+                console.log("🛑 Prevented accidental linking of hsascensores to admin account.")
+                return false
+            }
+
+            // Retroactive fix for existing users
+            if (user.email) {
+                try {
+                    // Check if trial is required
+                    const existingUser = await db.user.findUnique({ where: { email: user.email } })
+                    if (existingUser && !existingUser.trialEndsAt && existingUser.subscriptionStatus === 'trial') {
+                        const trialEndsAt = new Date()
+                        trialEndsAt.setDate(trialEndsAt.getDate() + 15)
+                        await db.user.update({ where: { id: existingUser.id }, data: { trialEndsAt } })
+                    }
+                } catch (e) { console.error(e) }
             }
             return true
         },
