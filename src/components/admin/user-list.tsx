@@ -278,7 +278,8 @@ export function UserList({ users, currentUserId }: { users: User[], currentUserI
                             <TableCell>
                                 <div className="flex flex-col">
                                     <span className="font-medium">{user.name || 'Sin Nombre'}</span>
-                                    <span className="text-xs text-muted-foreground">{user.cuit || user.email}</span>
+                                    <span className="text-xs text-muted-foreground">{user.email}</span>
+                                    {user.cuit && <span className="text-xs text-gray-400">CUIT: {user.cuit}</span>}
                                 </div>
                             </TableCell>
                             <TableCell>
