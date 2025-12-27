@@ -39,66 +39,98 @@ export function QRPoster({ clientName, equipmentName, address, qrDataUrl, logoUr
                 </Button>
             </div>
 
-            {/* Poster Preview */}
-            <div className="bg-white shadow-xl print:shadow-none w-full max-w-[21cm] aspect-[21/29.7] p-12 flex flex-col items-center justify-between border print:border-none relative overflow-hidden">
+            {/* Poster Preview / Print Area - A6 Size (105mm x 148mm) */}
+            <div id="print-area" className="bg-white text-black font-sans relative flex flex-col items-center justify-between overflow-hidden shadow-2xl print:shadow-none print:m-0"
+                style={{
+                    width: '104mm', // Slightly less than 105 to ensure fit
+                    height: '147mm', // Slightly less than 148
+                    padding: '8mm',
+                    border: '1px solid #e5e7eb' // Visible on screen, removed by print media if needed or kept as cut guide
+                }}>
+
+                {/* Cut Guide Border (Optional, helpful for cutting A4) */}
+                <div className="absolute inset-0 border-2 border-dashed border-gray-300 pointer-events-none print:border-gray-200" style={{ margin: '1px' }}></div>
+
                 {/* Header */}
-                <div className="w-full flex justify-between items-center border-b-4 border-black pb-6">
-                    <div className="flex flex-col">
-                        <h2 className="text-4xl font-black uppercase tracking-tighter">
-                            Mantenimiento
+                <div className="w-full flex flex-col items-center z-10 pt-2">
+                    {/* Logo Area */}
+                    <div className="h-12 w-full flex items-center justify-center mb-2">
+                        {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="h-full object-contain max-w-[80%]" />
+                        ) : (
+                            <h3 className="text-lg font-black uppercase tracking-tighter text-center leading-none">
+                                {fantasyName || 'SERVICIO TÉCNICO'}
+                            </h3>
+                        )}
+                    </div>
+
+                    {/* Title */}
+                    <div className="text-center">
+                        <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-500">
+                            MANTENIMIENTO PREVENTIVO
                         </h2>
-                        <h2 className="text-4xl font-black uppercase tracking-tighter text-blue-600">
-                            Preventivo
-                        </h2>
-                    </div>
-                    {logoUrl ? (
-                        <div className="relative h-20 w-40">
-                            <img src={logoUrl} alt="Logo" className="object-contain h-full w-full" />
-                        </div>
-                    ) : (
-                        <h3 className="text-2xl font-bold">{fantasyName || 'ELEVAR APP'}</h3>
-                    )}
-                </div>
-
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col items-center justify-center w-full gap-8">
-                    <div className="text-center space-y-2">
-                        <p className="text-xl text-gray-500 uppercase tracking-widest font-semibold">Consorcio</p>
-                        <h1 className="text-3xl font-bold">{clientName}</h1>
-                        <p className="text-2xl text-gray-800">{address}</p>
-                    </div>
-
-                    {equipmentName && (
-                        <div className="bg-black text-white px-8 py-2 rounded-full">
-                            <h2 className="text-2xl font-bold uppercase tracking-widest">{equipmentName}</h2>
-                        </div>
-                    )}
-
-                    <div className="p-4 border-8 border-black rounded-3xl">
-                        <img src={qrDataUrl} alt="QR Code" className="w-64 h-64 md:w-96 md:h-96 rendering-pixelated" />
-                    </div>
-
-                    <div className="text-center max-w-md">
-                        <p className="text-2xl font-bold text-center leading-tight">
-                            Escanee este código para ver el estado del servicio y la última visita técnica.
-                        </p>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="w-full border-t-2 border-gray-200 pt-6 text-center">
-                    <p className="text-gray-400 text-sm">Sistema de Gestión de Mantenimiento - Proveedor Autorizado</p>
+                {/* Main QR Section */}
+                <div className="flex-1 flex flex-col items-center justify-center w-full z-10">
+                    <div className="relative p-2 bg-white rounded-xl border-4 border-black shadow-sm">
+                        <img
+                            src={qrDataUrl}
+                            alt="QR Code"
+                            className="w-[50mm] h-[50mm] rendering-pixelated" // 5cm QR is substantial on A6
+                        />
+                        {/* Corner Accents */}
+                        <div className="absolute top-[-2px] left-[-2px] w-4 h-4 border-t-4 border-l-4 border-black rounded-tl-lg"></div>
+                        <div className="absolute top-[-2px] right-[-2px] w-4 h-4 border-t-4 border-r-4 border-black rounded-tr-lg"></div>
+                        <div className="absolute bottom-[-2px] left-[-2px] w-4 h-4 border-b-4 border-l-4 border-black rounded-bl-lg"></div>
+                        <div className="absolute bottom-[-2px] right-[-2px] w-4 h-4 border-b-4 border-r-4 border-black rounded-br-lg"></div>
+                    </div>
+
+                    <p className="mt-3 text-[10px] uppercase font-bold text-black flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse print:hidden"></span>
+                        Estado Digital en Vivo
+                    </p>
+                </div>
+
+                {/* Footer Info */}
+                <div className="w-full text-center z-10 pb-1 space-y-1">
+                    <h1 className="text-xl font-black leading-none uppercase truncate w-full px-2">
+                        {equipmentName || 'ASCENSOR'}
+                    </h1>
+                    <p className="text-[9px] text-gray-600 line-clamp-2 px-4 leading-tight">
+                        {address}
+                    </p>
+
+                    <div className="w-full h-px bg-gray-300 my-2"></div>
+
+                    <p className="text-[8px] text-gray-400 font-medium uppercase tracking-wider">
+                        Escanee para ver historial y reportes
+                    </p>
                 </div>
             </div>
 
             <style jsx global>{`
                 @media print {
                     @page {
-                        margin: 0;
-                        size: A4 portrait;
+                        size: A4; /* We let user put multiple or select paper */
+                        margin: 10mm;
                     }
                     body {
-                        background: white;
+                        visibility: hidden;
+                        background: none;
+                    }
+                    #print-area {
+                        visibility: visible;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        /* Force exact size */
+                        width: 104mm !important;
+                        height: 147mm !important;
+                        box-shadow: none;
+                        margin: 0;
+                        border: 1px dashed #ccc !important; /* Keep light border as cutting guide */
                     }
                 }
             `}</style>

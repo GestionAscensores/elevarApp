@@ -19,36 +19,75 @@ export async function POST(req: Request) {
             return new NextResponse('No file provided', { status: 400 })
         }
 
-        const text = await file.text()
-        const lines = text.split(/\r?\n/)
+        const fileContentBody = await file.text()
 
+
+        // Robust CSV Parser (State Machine) to handle newlines inside quotes
+        const parseCSV = (str: string) => {
+            const arr = []
+            let quote = false
+            let col = ''
+            let row = []
+
+            for (let c = 0; c < str.length; c++) {
+                const cc = str[c]
+                const nc = str[c + 1]
+
+                if (cc === '"') {
+                    if (quote && nc === '"') {
+                        // Escaped quote
+                        col += '"'
+                        c++
+                    } else {
+                        // Toggle quote status
+                        quote = !quote
+                    }
+                } else if (cc === ',' && !quote) {
+                    // End of column
+                    row.push(col)
+                    col = ''
+                } else if ((cc === '\r' || cc === '\n') && !quote) {
+                    // End of row
+                    // Handle \r\n vs \n
+                    if (cc === '\r' && nc === '\n') { c++ }
+
+                    row.push(col)
+                    arr.push(row)
+                    row = []
+                    col = ''
+                } else {
+                    col += cc
+                }
+            }
+            // Push last row if exists
+            if (row.length > 0 || col.length > 0) {
+                row.push(col)
+                arr.push(row)
+            }
+            return arr
+        }
+
+        const rows = parseCSV(fileContentBody)
         let successCount = 0
         let errorCount = 0
 
-        // Skip header row
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim()
-            if (!line) continue
-
-            // Simple CSV parser: handles quoted fields
-            const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
-            // Fallback for simple split if regex fails or complicates
-            // Actually, let's use a simpler split if quotes aren't heavy, but regex is safer for "Name, Corp"
-
-            // Simplified split (assuming no commas in values for MVP or quoted values)
-            // Better regex for CSV:
-            const row = line.match(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g)?.map(val => {
-                return val.replace(/^,/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim()
-            })
-
+        // Skip header row (index 0)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i]
             if (!row || row.length < 2) continue
 
-            const [name, docType, cuit, address, email, phone, ivaCondition, itemsJson, equipmentJson, invoicesJson, pricesJson] = row
+            // Ensure we map columns correctly based on Export order:
+            // ['Nro Cliente', 'Nombre', 'Tipo Doc', 'Documento', 'Direccion', 'Email', 'Telefono', 'Condicion IVA', 'Equipos', 'Bitacora', 'Facturas', 'Historial Precios']
+            // Note: The loop below destructures assuming this exact order.
+
+            const [clientNumberStr, name, docType, cuit, address, email, phone, ivaCondition, itemsJson, equipmentJson, invoicesJson, pricesJson] = row
 
             if (!name || !cuit) {
                 errorCount++
                 continue
             }
+
+            const clientNumber = clientNumberStr ? parseInt(clientNumberStr) : null
 
             let billingItems = []
             let bitacora = []
@@ -61,6 +100,25 @@ export async function POST(req: Request) {
             } catch (e) {
                 console.error("Error parsing JSON columns", e)
             }
+
+            // Find or Create Default Technician for History (to avoid FK errors)
+            let defaultTech = await db.technician.findFirst({ where: { userId: session.userId } })
+            if (!defaultTech) {
+                // If no tech exists, create a placeholder one for historical data
+                try {
+                    defaultTech = await db.technician.create({
+                        data: {
+                            userId: session.userId,
+                            name: 'Historial Importado',
+                            pin: '0000',
+                            isActive: false
+                        }
+                    })
+                } catch (e) {
+                    console.error("Could not create default tech", e)
+                }
+            }
+            const fallbackTechId = defaultTech?.id
 
             // Transactional update/create
             await db.$transaction(async (tx) => {
@@ -81,6 +139,7 @@ export async function POST(req: Request) {
                         where: { id: client.id },
                         data: {
                             name,
+                            clientNumber: clientNumber || undefined,
                             docType: docType || '80',
                             email: email || '',
                             phone: phone || '',
@@ -93,6 +152,7 @@ export async function POST(req: Request) {
                         data: {
                             userId: session.userId,
                             name,
+                            clientNumber,
                             docType: docType || '80',
                             cuit: cuit.replace(/-/g, ''),
                             address: address || '',
@@ -119,21 +179,32 @@ export async function POST(req: Request) {
                 }
 
                 // 2. Sync Bitacora (Equipment + Visits)
-                // We do NOT delete all equipment blindly to avoid losing data if import is partial.
-                // We upsert by QR code or Name? 
-                // Currently only name/type is guaranteed. Let's create if not exists.
-                // For simplified bulk restore, we might delete if "Overwrite" is implied, but let's be safe: 
-                // Only create new equipment from import.
                 if (bitacora && bitacora.length > 0) {
-                    // For each equipment in import
                     for (const eq of bitacora) {
-                        // Check if exists by name for this client
-                        // Simple dedupe strategy: Name match
-                        const exists = await tx.equipment.findFirst({
-                            where: { clientId: client.id, name: eq.name }
-                        })
-
+                        // Strategy: Upsert by QR Code (unique) or Name+Client
+                        let exists = null
+                        if (eq.qrCode) {
+                            exists = await tx.equipment.findFirst({ where: { qrCode: eq.qrCode } })
+                        }
                         if (!exists) {
+                            exists = await tx.equipment.findFirst({
+                                where: { clientId: client.id, name: eq.name }
+                            })
+                        }
+
+                        let equipmentId = exists?.id
+
+                        if (exists) {
+                            await tx.equipment.update({
+                                where: { id: exists.id },
+                                data: {
+                                    type: eq.type,
+                                    description: eq.description,
+                                    installDate: eq.installDate ? new Date(eq.installDate) : undefined
+                                }
+                            })
+                        } else {
+                            // Create new
                             const newEq = await tx.equipment.create({
                                 data: {
                                     clientId: client.id,
@@ -145,34 +216,30 @@ export async function POST(req: Request) {
                                     installDate: eq.installDate ? new Date(eq.installDate) : null
                                 } as any
                             })
+                            equipmentId = newEq.id
+                        }
 
-                            // Restore Visits if present
-                            if (eq.visits && eq.visits.length > 0) {
+                        // Restore Visits if present
+                        // Only proceed if we have a valid technician ID (fallback)
+                        if (equipmentId && eq.visits && eq.visits.length > 0 && fallbackTechId) {
+                            const visitsToCreate = eq.visits.map((v: any) => ({
+                                clientId: client.id,
+                                equipmentId: equipmentId,
+                                date: new Date(v.date),
+                                type: v.type,
+                                status: v.status,
+                                publicNotes: v.publicNotes,
+                                privateNotes: v.privateNotes,
+                                proofUrl: v.proofUrl,
+                                technicianId: fallbackTechId // Use fallback to satisfy FK constraint
+                            }))
+
+                            try {
                                 await tx.maintenanceVisit.createMany({
-                                    data: eq.visits.map((v: any) => ({
-                                        clientId: client.id, // Visits link to client too
-                                        equipmentId: newEq.id,
-                                        date: new Date(v.date),
-                                        type: v.type,
-                                        status: v.status,
-                                        publicNotes: v.publicNotes,
-                                        privateNotes: v.privateNotes,
-                                        proofUrl: v.proofUrl,
-                                        technicianId: v.technicianId // Be careful with foreign keys! Technician might not exist in new DB.
-                                        // If technicianId is from another DB, this will fail. 
-                                        // We should probably set technicianId to NULL or find a default.
-                                        // SAFEGUAD: We cannot import technicianId blindly.
-                                        // FIXME: For this task, I will omit technicianId restoration to prevent FK errors, or fallback.
-                                    })).map(({ technicianId, ...rest }: any) => {
-                                        // Hack: we need a technicianId.
-                                        // Ideally we look up by name. For now let's skip visits import if strict, 
-                                        // OR we just create a "System" technician?
-                                        // Let's SKIP creating visits to avoid FK crashes for now unless we are sure.
-                                        // The user said "include history". 
-                                        // I'll try to find a technician by name, else skip.
-                                        return rest
-                                    }).filter((v: any) => false) // DISABLE VISITS IMPORT TO PREVENT CRASH FOR NOW until we solve Technician mapping.
+                                    data: visitsToCreate as any
                                 })
+                            } catch (e) {
+                                console.warn("Skipped visits import due to existance/error", e)
                             }
                         }
                     }

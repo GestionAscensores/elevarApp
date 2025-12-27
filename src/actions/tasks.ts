@@ -31,13 +31,26 @@ export async function createTask(data: {
     }
 }
 
+import { verifySession } from '@/lib/session'
+
 export async function getPendingTasks(clientId?: string) {
-    const whereClause = clientId
-        ? { clientId, status: 'PENDING' }
-        : { status: 'PENDING' }
+    const session = await verifySession()
+    if (!session) return []
+
+    // Filter by user's clients
+    const whereClause: any = {
+        status: 'PENDING',
+        client: {
+            userId: session.userId
+        }
+    }
+
+    if (clientId) {
+        whereClause.clientId = clientId
+    }
 
     try {
-        return await db.maintenanceTask.findMany({
+        const tasks = await db.maintenanceTask.findMany({
             where: whereClause,
             include: {
                 client: {
@@ -49,6 +62,7 @@ export async function getPendingTasks(clientId?: string) {
             },
             orderBy: { createdAt: 'desc' }
         })
+        return tasks
     } catch (e) {
         console.error("Error fetching tasks:", e)
         return []

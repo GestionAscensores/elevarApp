@@ -30,28 +30,39 @@ export async function GET() {
     })
 
     const csvRows = [
-        ['Nombre', 'Tipo Doc', 'Documento', 'Direccion', 'Email', 'Telefono', 'Condicion IVA', 'Equipos (Billing)', 'Bitacora (JSON)', 'Facturas (JSON)', 'Historial Precios (JSON)'].join(',')
+        ['Nro Cliente', 'Nombre', 'Tipo Doc', 'Documento', 'Direccion', 'Email', 'Telefono', 'Condicion IVA', 'Equipos (Billing)', 'Bitacora (JSON)', 'Facturas (JSON)', 'Historial Precios (JSON)'].join(',')
     ]
 
+    // Helper to escape CSV fields compliant with RFC 4180
+    const toCsvField = (value: any) => {
+        if (value === null || value === undefined) return '""'
+        const stringValue = String(value)
+        // Check if value needs escaping (contains ", \n, or ,)
+        if (stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes(',')) {
+            return `"${stringValue.replace(/"/g, '""')}"`
+        }
+        return `"${stringValue}"` // Always quote for consistency, though optional if no special chars
+    }
+
     for (const client of clients) {
-        // Serialize items to JSON, escaping quotes for CSV
-        const itemsJson = JSON.stringify(client.items || []).replace(/"/g, '""')
-        const equipmentJson = JSON.stringify(client.equipment || []).replace(/"/g, '""')
-        const invoicesJson = JSON.stringify(client.invoices || []).replace(/"/g, '""')
-        const pricesJson = JSON.stringify(client.priceHistory || []).replace(/"/g, '""')
+        const itemsJson = JSON.stringify(client.items || [])
+        const equipmentJson = JSON.stringify(client.equipment || [])
+        const invoicesJson = JSON.stringify(client.invoices || [])
+        const pricesJson = JSON.stringify(client.priceHistory || [])
 
         csvRows.push([
-            `"${client.name}"`,
-            `"${client.docType}"`,
-            `"${client.cuit}"`,
-            `"${client.address || ''}"`,
-            `"${client.email || ''}"`,
-            `"${client.phone || ''}"`,
-            `"${client.ivaCondition || 'Consumidor Final'}"`,
-            `"${itemsJson}"`,
-            `"${equipmentJson}"`,
-            `"${invoicesJson}"`,
-            `"${pricesJson}"`
+            toCsvField(client.clientNumber || ''),
+            toCsvField(client.name),
+            toCsvField(client.docType),
+            toCsvField(client.cuit),
+            toCsvField(client.address || ''),
+            toCsvField(client.email || ''),
+            toCsvField(client.phone || ''),
+            toCsvField(client.ivaCondition || 'Consumidor Final'),
+            toCsvField(itemsJson),
+            toCsvField(equipmentJson),
+            toCsvField(invoicesJson),
+            toCsvField(pricesJson)
         ].join(','))
     }
 
