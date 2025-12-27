@@ -2,15 +2,15 @@
 
 import { db as prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { auth } from '@/lib/auth'
+import { verifySession } from '@/lib/session'
 
 export async function getTechnicians() {
-    const session = await auth()
-    if (!session?.user?.id) return []
+    const session = await verifySession()
+    if (!session?.userId) return []
 
     return await prisma.technician.findMany({
         where: {
-            userId: session.user.id,
+            userId: session.userId,
             isActive: true
         },
         orderBy: {
@@ -20,8 +20,8 @@ export async function getTechnicians() {
 }
 
 export async function createTechnician(fd: FormData) {
-    const session = await auth()
-    if (!session?.user?.id) return { error: "No autorizado" }
+    const session = await verifySession()
+    if (!session?.userId) return { error: "No autorizado" }
 
     const name = fd.get('name') as string
     const pin = fd.get('pin') as string
@@ -31,21 +31,17 @@ export async function createTechnician(fd: FormData) {
         return { error: "Datos inválidos. El PIN debe tener 4 dígitos." }
     }
 
-    // console.log(`[CreateTechnician] Attempting to create: ${name} with PIN ${pin}`)
-
     try {
-        // Handle "Zombie" PINs: If an inactive tech exists with this PIN, rename its PIN to free it up.
-        // This handles cases where a tech was deleted BEFORE our fix was implemented.
+        // Handle "Zombie" PINs
         const zombieTech = await prisma.technician.findFirst({
             where: {
-                userId: session.user.id,
+                userId: session.userId,
                 pin: pin,
-                isActive: false // Only target deleted ones
+                isActive: false
             }
         })
 
         if (zombieTech) {
-            // console.log(`[CreateTechnician] Found zombie tech ${zombieTech.name} (${zombieTech.id}). Renaming PIN...`)
             await prisma.technician.update({
                 where: { id: zombieTech.id },
                 data: { pin: `${zombieTech.pin}_OLD_${Date.now()}`.slice(0, 30) }
@@ -55,7 +51,7 @@ export async function createTechnician(fd: FormData) {
         // Now create the new one
         await prisma.technician.create({
             data: {
-                userId: session.user.id,
+                userId: session.userId,
                 name,
                 pin,
                 avatarUrl
@@ -69,19 +65,17 @@ export async function createTechnician(fd: FormData) {
 }
 
 export async function deleteTechnician(id: string) {
-    const session = await auth()
-    if (!session?.user?.id) return { error: "No autorizado" }
+    const session = await verifySession()
+    if (!session?.userId) return { error: "No autorizado" }
 
-    // 1. Get current tech to append to PIN (avoiding collision even on deletes)
     const tech = await prisma.technician.findUnique({ where: { id } })
     if (!tech) return { error: "Técnico no encontrado" }
 
-    // 2. Soft delete + Rename PIN to free it up
     await prisma.technician.update({
         where: { id },
         data: {
             isActive: false,
-            pin: `${tech.pin}_DEL_${Date.now()}`.slice(0, 30) // Ensure it fits if there's a limit, though PIN is likely short
+            pin: `${tech.pin}_DEL_${Date.now()}`.slice(0, 30)
         }
     })
     revalidatePath('/dashboard/technicians')
@@ -89,9 +83,7 @@ export async function deleteTechnician(id: string) {
 }
 
 export async function validateTechnicianPin(userId: string, pin: string) {
-    // This action is public/semi-public called by the scan page
-    // We need the userId (Company Owner ID) because PINs are unique per company
-
+    // Public/Semi-public action
     const tech = await prisma.technician.findFirst({
         where: {
             userId,
@@ -110,12 +102,12 @@ export async function validateTechnicianPin(userId: string, pin: string) {
 }
 
 export async function updateTechnicianName(id: string, name: string) {
-    const session = await auth()
-    if (!session?.user?.id) return { success: false, message: "No autorizado" }
+    const session = await verifySession()
+    if (!session?.userId) return { success: false, message: "No autorizado" }
 
     try {
         await prisma.technician.update({
-            where: { id, userId: session.user.id },
+            where: { id, userId: session.userId },
             data: { name }
         })
         revalidatePath('/dashboard/technicians')
@@ -126,16 +118,15 @@ export async function updateTechnicianName(id: string, name: string) {
 }
 
 export async function updateTechnicianPin(id: string, pin: string) {
-    const session = await auth()
-    if (!session?.user?.id) return { success: false, message: "No autorizado" }
+    const session = await verifySession()
+    if (!session?.userId) return { success: false, message: "No autorizado" }
 
     if (!pin || pin.length !== 4) return { success: false, message: "El PIN debe tener 4 dígitos" }
 
     try {
-        // Check for PIN collision (active techs only)
         const existing = await prisma.technician.findFirst({
             where: {
-                userId: session.user.id,
+                userId: session.userId,
                 pin,
                 isActive: true,
                 NOT: { id }
@@ -145,7 +136,7 @@ export async function updateTechnicianPin(id: string, pin: string) {
         if (existing) return { success: false, message: "PIN ya está en uso" }
 
         await prisma.technician.update({
-            where: { id, userId: session.user.id },
+            where: { id, userId: session.userId },
             data: { pin }
         })
         revalidatePath('/dashboard/technicians')
@@ -156,12 +147,12 @@ export async function updateTechnicianPin(id: string, pin: string) {
 }
 
 export async function updateTechnicianAvatar(id: string, base64: string) {
-    const session = await auth()
-    if (!session?.user?.id) return { success: false, message: "No autorizado" }
+    const session = await verifySession()
+    if (!session?.userId) return { success: false, message: "No autorizado" }
 
     try {
         await prisma.technician.update({
-            where: { id, userId: session.user.id },
+            where: { id, userId: session.userId },
             data: { avatarUrl: base64 }
         })
         revalidatePath('/dashboard/technicians')
@@ -172,12 +163,12 @@ export async function updateTechnicianAvatar(id: string, base64: string) {
 }
 
 export async function deleteTechnicianAvatar(id: string) {
-    const session = await auth()
-    if (!session?.user?.id) return { success: false, message: "No autorizado" }
+    const session = await verifySession()
+    if (!session?.userId) return { success: false, message: "No autorizado" }
 
     try {
         await prisma.technician.update({
-            where: { id, userId: session.user.id },
+            where: { id, userId: session.userId },
             data: { avatarUrl: null }
         })
         revalidatePath('/dashboard/technicians')
