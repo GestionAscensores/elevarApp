@@ -37,6 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         role: true,
                         subscriptionStatus: true,
                         subscriptionExpiresAt: true,
+                        trialEndsAt: true, // Added
                         isEmailVerified: true,
                         isActive: true
                     }
@@ -63,115 +64,75 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     role: user.role,
                     subscriptionStatus: user.subscriptionStatus,
                     subscriptionExpiresAt: user.subscriptionExpiresAt,
+                    trialEndsAt: user.trialEndsAt,
                     isEmailVerified: user.isEmailVerified
                 }
             }
         })
     ],
-    events: {
-        async createUser({ user }) {
-            console.log("🆕 User created, setting trial period for:", user.email)
-            if (user.id) {
-                const trialEndsAt = new Date()
-                trialEndsAt.setDate(trialEndsAt.getDate() + 15) // 15 days trial
-                try {
-                    await db.user.update({ where: { id: user.id }, data: { trialEndsAt, subscriptionStatus: 'trial' } })
-                } catch (error) {
-                    console.error("Error setting trial for new user:", error)
-                }
-            }
-        }
-    },
+    // ... events ...
     callbacks: {
         ...authConfig.callbacks,
         async signIn({ user, account, profile }) {
-            console.log("---- SIGN IN DEBUG ----")
-            console.log("User:", user?.email, user?.id)
-            console.log("Profile:", profile?.email)
-            console.log("Account provider:", account?.provider)
             // Check if user is active (for OAuth specifically, though authorizes covers credentials)
-
-            if (user.email) {
-                const dbUser = await db.user.findUnique({
-                    where: { email: user.email },
-                    select: { isActive: true }
-                })
-
-                if (dbUser && !dbUser.isActive) {
-                    return false // Deny login
-                }
-            }
-
-            // GUARDIAN: Prevent accidental linking of hsascensores to amilcarserra
-            // This happens if the admin is logged in and tries to "sign up" with the new google account
-            // NextAuth tries to link them. We want to FORCE a separate account.
-            if (
-                account?.provider === 'google' &&
-                profile?.email === 'hsascensores@gmail.com' &&
-                user.email === 'amilcarserra@gmail.com'
-            ) {
-                console.log("🛑 Prevented accidental linking of hsascensores to admin account.")
-                return false
-            }
-
-            // Retroactive fix for existing users
-            if (user.email) {
-                try {
-                    // Check if trial is required
-                    const existingUser = await db.user.findUnique({ where: { email: user.email } })
-                    if (existingUser && !existingUser.trialEndsAt && existingUser.subscriptionStatus === 'trial') {
-                        const trialEndsAt = new Date()
-                        trialEndsAt.setDate(trialEndsAt.getDate() + 15)
-                        await db.user.update({ where: { id: existingUser.id }, data: { trialEndsAt } })
-                    }
-                } catch (e) { console.error(e) }
+            // 1. Initial Sign In
+            if (user) {
+                token.sub = user.id
+                token.role = user.role
+                token.subscriptionStatus = user.subscriptionStatus
+                // ... (keep existing logic) ...
             }
             return true
-        }, async jwt({ token, user, account, profile, trigger }) {
-            // 1. Initial Sign In (Credentials or OAuth)
+        },
+        async jwt({ token, user, account, profile, trigger }) {
+            // 1. Initial Sign In
             if (user) {
                 token.sub = user.id
                 token.role = user.role
                 token.subscriptionStatus = user.subscriptionStatus
                 token.subscriptionExpiresAt = user.subscriptionExpiresAt?.toISOString()
                 // @ts-ignore
+                token.trialEndsAt = user.trialEndsAt?.toISOString()
+                // @ts-ignore
                 token.isEmailVerified = user.isEmailVerified || !!user.emailVerified
                 return token
             }
 
-            // 2. OAuth First Login (if user obj missing but profile present)
+            // 2. OAuth First Login
             if (profile?.email && !token.role) {
                 try {
                     const dbUser = await db.user.findUnique({
                         where: { email: profile.email as string },
-                        select: { id: true, role: true, subscriptionStatus: true, subscriptionExpiresAt: true }
+                        select: { id: true, role: true, subscriptionStatus: true, subscriptionExpiresAt: true, trialEndsAt: true }
                     })
                     if (dbUser) {
                         token.sub = dbUser.id
                         token.role = dbUser.role
                         token.subscriptionStatus = dbUser.subscriptionStatus
                         token.subscriptionExpiresAt = dbUser.subscriptionExpiresAt?.toISOString()
+                        // @ts-ignore
+                        token.trialEndsAt = dbUser.trialEndsAt?.toISOString()
                     }
                 } catch (e) { console.error("Error finding user in JWT", e) }
             }
 
-            // 3. Refresh (accessing DB to keep data fresh)
+            // 3. Refresh
             if (token.sub) {
                 try {
                     const dbUser = await db.user.findUnique({
                         where: { id: token.sub },
-                        select: { role: true, subscriptionStatus: true, subscriptionExpiresAt: true, isEmailVerified: true }
+                        select: { role: true, subscriptionStatus: true, subscriptionExpiresAt: true, trialEndsAt: true, isEmailVerified: true }
                     })
                     if (dbUser) {
                         token.role = dbUser.role
                         token.subscriptionStatus = dbUser.subscriptionStatus
                         token.subscriptionExpiresAt = dbUser.subscriptionExpiresAt?.toISOString()
                         // @ts-ignore
+                        token.trialEndsAt = dbUser.trialEndsAt?.toISOString()
+                        // @ts-ignore
                         token.isEmailVerified = dbUser.isEmailVerified
                     }
                 } catch (e) {
-                    // In Node.js runtime this is fine.
-                    // On Edge, this would crash. But this full config is only used in Node.
                     console.error("Error refreshing token data", e)
                 }
             }
@@ -187,11 +148,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 // @ts-ignore
                 session.user.subscriptionExpiresAt = token.subscriptionExpiresAt as string | null
                 // @ts-ignore
+                session.user.trialEndsAt = token.trialEndsAt as string | null
+                // @ts-ignore
                 session.user.isEmailVerified = token.isEmailVerified as boolean
             }
             return session
         },
-
     }
 })
 

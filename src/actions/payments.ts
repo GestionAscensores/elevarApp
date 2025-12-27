@@ -72,9 +72,13 @@ export async function createSubscriptionPreference() {
         return { success: false, message: 'No autorizado' }
     }
 
+    let price = 0
     try {
-        const price = await getSubscriptionPrice()
+        price = await getSubscriptionPrice()
         const preference = new Preference(mpClient)
+
+        // Fallback for local development if env var is missing
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
         const result = await preference.create({
             body: {
@@ -88,11 +92,11 @@ export async function createSubscriptionPreference() {
                     }
                 ],
                 back_urls: {
-                    success: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-                    failure: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription`,
-                    pending: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription`
+                    success: `${appUrl}/dashboard`,
+                    failure: `${appUrl}/dashboard/subscription`,
+                    pending: `${appUrl}/dashboard/subscription`
                 },
-                notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mercadopago`,
+                notification_url: `${appUrl}/api/webhooks/mercadopago`,
                 auto_return: 'approved',
                 external_reference: session.userId,
                 statement_descriptor: "ELEVAR APP"
@@ -106,6 +110,6 @@ export async function createSubscriptionPreference() {
         return { success: true, url: result.init_point }
     } catch (error) {
         console.error('Error creating preference:', error)
-        return { success: false, message: 'Error al conectar con MercadoPago' }
+        return { success: false, message: 'Error al conectar con MercadoPago: ' + (error as any).message }
     }
 }

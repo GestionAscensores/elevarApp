@@ -27,6 +27,10 @@ export const authConfig: NextAuthConfig = {
                 token.role = user.role
                 token.subscriptionStatus = user.subscriptionStatus
                 // @ts-ignore
+                token.trialEndsAt = user.trialEndsAt
+                // @ts-ignore
+                token.subscriptionExpiresAt = user.subscriptionExpiresAt
+                // @ts-ignore
                 token.isEmailVerified = user.isEmailVerified
             }
 
@@ -46,6 +50,10 @@ export const authConfig: NextAuthConfig = {
                 session.user.subscriptionStatus = token.subscriptionStatus as string
                 // @ts-ignore
                 session.user.isEmailVerified = token.isEmailVerified as boolean
+                // @ts-ignore
+                session.user.trialEndsAt = token.trialEndsAt
+                // @ts-ignore
+                session.user.subscriptionExpiresAt = token.subscriptionExpiresAt
             }
             return session
         }

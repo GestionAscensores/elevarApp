@@ -34,12 +34,15 @@ export default auth(async (req) => {
     }
 
     // Combined user object (either token or customSession)
+    // token is NextAuth Session { user: { ... } }
+    // customSession is Flat JWT Payload { role: ... }
+
     // @ts-ignore
-    const userRole = token?.role || customSession?.role
+    const userRole = token?.user?.role || customSession?.role
     // @ts-ignore
-    const userSubStatus = token?.subscriptionStatus || customSession?.subscriptionStatus
+    const userSubStatus = token?.user?.subscriptionStatus || customSession?.subscriptionStatus
     // @ts-ignore
-    const userSubExpires = token?.subscriptionExpiresAt || customSession?.expiresAt
+    const userSubExpires = token?.user?.subscriptionExpiresAt || customSession?.expiresAt
 
     // Log omitted for cleaner production logs, or kept for debugging
     // console.log("🔒 MIDDLEWARE CHECK:", { path, role: userRole })
@@ -66,7 +69,7 @@ export default auth(async (req) => {
 
         const subscriptionStatus = userSubStatus as string || 'trial'
         // @ts-ignore
-        const trialEndsAt = (token?.trialEndsAt || customSession?.trialEndsAt) as string
+        const trialEndsAt = (token?.user?.trialEndsAt || customSession?.trialEndsAt) as string
 
         // 1. Check Suspended/Cancelled
         if (subscriptionStatus === "suspended" || subscriptionStatus === "cancelled") {
@@ -79,7 +82,17 @@ export default auth(async (req) => {
             // But if exists and is past, BLOCK.
             if (trialEndsAt) {
                 const expiryDate = new Date(trialEndsAt)
-                if (expiryDate < new Date()) {
+                const now = new Date()
+
+                console.log("Middleware Check:", {
+                    status: subscriptionStatus,
+                    trialEndsAt,
+                    expiryDate: expiryDate.toISOString(),
+                    now: now.toISOString(),
+                    isExpired: expiryDate < now
+                })
+
+                if (expiryDate < now) {
                     // console.log("Blocking expired trial user", { expiryDate })
                     return NextResponse.redirect(new URL("/dashboard/subscription", req.url))
                 }
