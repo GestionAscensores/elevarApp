@@ -37,7 +37,17 @@ export async function POST(req: Request) {
                             subscriptionStatus: 'active',
                             subscriptionExpiresAt: newExpiry,
                             isActive: true,
-                            // Clear trial date if they paid? Or leave it for history.
+                        }
+                    })
+
+                    // Log Payment for Revenue Tracking
+                    await db.subscriptionPayment.create({
+                        data: {
+                            userId: userId,
+                            amount: payment.transaction_amount || 0,
+                            provider: 'mercadopago',
+                            providerId: String(payment.id),
+                            status: 'approved'
                         }
                     })
 

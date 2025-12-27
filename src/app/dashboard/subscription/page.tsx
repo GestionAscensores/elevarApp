@@ -1,14 +1,20 @@
 'use client'
 
 import { createSubscriptionPreference } from "@/actions/payments"
+import { getSubscriptionPrice } from "@/actions/settings"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Lock } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export default function SubscriptionPage() {
     const [loading, setLoading] = useState(false)
+    const [price, setPrice] = useState<number | null>(null)
+
+    useEffect(() => {
+        getSubscriptionPrice().then(setPrice)
+    }, [])
 
     const handleSubscribe = async () => {
         setLoading(true)
@@ -26,6 +32,10 @@ export default function SubscriptionPage() {
         }
     }
 
+    const formattedPrice = price
+        ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(price)
+        : '...'
+
     return (
         <div className="flex items-center justify-center min-h-[80vh]">
             <Card className="w-full max-w-md border-red-200 shadow-xl">
@@ -42,7 +52,7 @@ export default function SubscriptionPage() {
                     <div className="bg-slate-50 p-4 rounded-lg border text-center">
                         <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">Plan Mensual</p>
                         <div className="flex items-baseline justify-center gap-1 mt-2">
-                            <span className="text-3xl font-bold">$15.000</span>
+                            <span className="text-3xl font-bold">{formattedPrice}</span>
                             <span className="text-muted-foreground">/mes</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">Acceso completo a facturación y clientes</p>
@@ -59,7 +69,7 @@ export default function SubscriptionPage() {
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         size="lg"
                         onClick={handleSubscribe}
-                        disabled={loading}
+                        disabled={loading || !price}
                     >
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {loading ? 'Procesando...' : 'Suscribirse con MercadoPago'}

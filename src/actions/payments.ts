@@ -60,6 +60,7 @@ export async function markMultipleAsPaid(invoiceIds: string[]) {
 }
 
 import { MercadoPagoConfig, Preference } from 'mercadopago'
+import { getSubscriptionPrice } from './settings'
 
 const mpClient = new MercadoPagoConfig({
     accessToken: process.env.MP_ACCESS_TOKEN || ''
@@ -72,6 +73,7 @@ export async function createSubscriptionPreference() {
     }
 
     try {
+        const price = await getSubscriptionPrice()
         const preference = new Preference(mpClient)
 
         const result = await preference.create({
@@ -81,7 +83,7 @@ export async function createSubscriptionPreference() {
                         id: 'subscription-monthly',
                         title: 'Suscripción Mensual Elevar App',
                         quantity: 1,
-                        unit_price: 15000,
+                        unit_price: price, // Dynamic Price
                         currency_id: 'ARS'
                     }
                 ],

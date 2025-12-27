@@ -1,7 +1,9 @@
 import { getUsers } from '@/actions/users'
-import { getAdminMetrics } from '@/actions/admin' // New Stats Action
+import { getAdminMetrics } from '@/actions/admin'
+import { getSubscriptionPrice } from '@/actions/settings' // Fetch Price
 import { UserList } from '@/components/admin/user-list'
-import { AdminStats } from '@/components/admin/admin-stats' // New Stats Component
+import { AdminStats } from '@/components/admin/admin-stats'
+import { PricingConfig } from '@/components/admin/pricing-config' // New Component
 import { verifySession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import { CleanupZone } from '@/components/admin/cleanup-zone'
@@ -14,9 +16,10 @@ export default async function AdminDashboardPage() {
     if (!session || session.role !== 'ADMIN') redirect('/dashboard')
 
     // Fetch Data in Parallel
-    const [users, stats] = await Promise.all([
+    const [users, stats, currentPrice] = await Promise.all([
         getUsers(),
-        getAdminMetrics()
+        getAdminMetrics(),
+        getSubscriptionPrice()
     ])
 
     return (
@@ -31,7 +34,7 @@ export default async function AdminDashboardPage() {
                 <TestUserInfo />
             </section>
 
-            {/* Platform Stats (New Addition) */}
+            {/* Platform Stats */}
             <section>
                 <h2 className="text-lg font-semibold mb-4">Métricas de la Plataforma</h2>
                 {stats ? (
@@ -43,9 +46,18 @@ export default async function AdminDashboardPage() {
                 )}
             </section>
 
+            {/* Configuration Zone (Price) */}
+            <section>
+                <h2 className="text-lg font-semibold mb-4">Configuración del Sistema</h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <PricingConfig currentPrice={currentPrice} />
+                    {/* Future gadgets can go here */}
+                </div>
+            </section>
+
             <div className="border-t my-6" />
 
-            {/* User Management (Restored) */}
+            {/* User Management */}
             <section>
                 <div className="mb-4">
                     <h2 className="text-xl font-semibold">Usuarios Registrados</h2>

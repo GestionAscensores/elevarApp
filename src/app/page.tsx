@@ -2,7 +2,13 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, ChevronRight, Zap, Building2, ShieldCheck, Mail, Users, ArrowRight, BarChart3, Edit, Sparkles, MapPin, QrCode, Camera, Package, TrendingUp } from 'lucide-react'
 
-export default function LandingPage() {
+import { getSubscriptionPrice } from '@/actions/settings'
+
+export default async function LandingPage() {
+  const price = await getSubscriptionPrice()
+  const formattedPrice = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(price)
+  const fakeOriginalPrice = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(price * 1.5)
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground scroll-smooth">
       {/* Header */}
@@ -153,10 +159,10 @@ export default function LandingPage() {
                 </div>
                 <div className="text-center space-y-4 mb-8">
                   <h3 className="text-2xl font-bold text-muted-foreground line-through decoration-red-500 decoration-2 opacity-70">
-                    $75.000
+                    {fakeOriginalPrice}
                   </h3>
                   <div className="flex items-center justify-center gap-1">
-                    <span className="text-6xl font-extrabold tracking-tight">$50.000</span>
+                    <span className="text-6xl font-extrabold tracking-tight">{formattedPrice.split(',')[0]}</span>
                     <span className="text-xl font-medium text-muted-foreground self-end mb-2">/mes</span>
                   </div>
                   <p className="text-sm text-muted-foreground">Final. Sin costos extra.</p>

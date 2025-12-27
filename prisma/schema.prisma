@@ -36,6 +36,28 @@ model User {
   sessions                 Session[]
   config                   UserConfig?
   technicians              Technician[]
+  subscriptionPayments     SubscriptionPayment[]
+}
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model SubscriptionPayment {
+  id         String   @id @default(cuid())
+  userId     String
+  amount     Decimal  @db.Decimal(10, 2)
+  provider   String   @default("mercadopago")
+  providerId String?  // Payment ID from MP
+  status     String   @default("approved")
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
 }
 
 model UserConfig {
