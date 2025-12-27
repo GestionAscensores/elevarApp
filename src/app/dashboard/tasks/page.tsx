@@ -1,17 +1,20 @@
 import { getPendingTasks } from '@/actions/tasks'
+import { getClients } from '@/actions/clients'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { updateTaskStatus } from '@/actions/tasks' // I'll need a client component for interactive actions or use server forms
+import { updateTaskStatus } from '@/actions/tasks'
+import { CreateTaskDialog } from '@/components/maintenance/create-task-dialog'
 
 export default async function TasksPage() {
     // In a real app we might paginate or filter by user role
     const tasks = await getPendingTasks()
+    const clients = await getClients()
 
     // Group tasks by Client Name
     const groupedTasks: Record<string, typeof tasks> = {}
-    tasks.forEach(task => {
+    tasks.forEach((task: any) => {
         const clientName = task.client.name
         if (!groupedTasks[clientName]) {
             groupedTasks[clientName] = []
@@ -21,9 +24,12 @@ export default async function TasksPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Tareas Pendientes</h1>
-                <p className="text-muted-foreground">Gestión de reparaciones y tareas solicitadas por técnicos.</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Tareas Pendientes</h1>
+                    <p className="text-muted-foreground">Gestión de reparaciones y tareas solicitadas.</p>
+                </div>
+                <CreateTaskDialog clients={clients} />
             </div>
 
             {Object.keys(groupedTasks).length === 0 ? (
@@ -45,7 +51,7 @@ export default async function TasksPage() {
                                 <CardDescription>{clientTasks[0].client.address}</CardDescription>
                             </CardHeader>
                             <CardContent className="grid gap-4 pt-4">
-                                {clientTasks.map(task => (
+                                {clientTasks.map((task: any) => (
                                     <div key={task.id} className="flex items-start justify-between border-b last:border-0 pb-4 last:pb-0">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
