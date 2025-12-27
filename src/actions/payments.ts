@@ -90,6 +90,7 @@ export async function createSubscriptionPreference() {
                     failure: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription`,
                     pending: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription`
                 },
+                notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mercadopago`,
                 auto_return: 'approved',
                 external_reference: session.userId,
                 statement_descriptor: "ELEVAR APP"
